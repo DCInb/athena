@@ -546,6 +546,7 @@ void RadIntegrator::GetTgasVel(MeshBlock *pmb, const Real dt,
 
 // f_l is the factor in the opposite direction of vel
 // f_r is the factor in the same direction of vel
+// compute the signal speed
 void RadIntegrator::SignalSpeed(const Real adv, const Real f_l,
                                 const Real f_r, Real *vel, Real *smax, Real *smin) {
   for (int n=0; n<pmy_rad->nang; ++n) {
