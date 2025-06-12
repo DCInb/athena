@@ -37,6 +37,10 @@ athena
 *.hst
 *.rst
 meshtest.dat
+*.err
+*.output
+*.dat
+job.slurm
 
 # Visualization package files
 .smhist
