@@ -70,3 +70,6 @@ doc/doxy*
 
 # vscode files
 .vscode/
+
+# git
+git.sh
