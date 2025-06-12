@@ -40,7 +40,7 @@
 #include "../utils/utils.hpp"
 #include "../outputs/outputs.hpp"
 #include "../scalars/scalars.hpp"
-
+#include "../kappa/kappa.hpp"
 
 
 
@@ -159,7 +159,7 @@ Real mykappa;
 Real fvir;
 
 bool is_local_dep; // whether to apply local deposited energy or not
-Real vol_dep;
+Real vol_dep, x_dep, y_dep, z_dep,r_dep, deltaE;
 
 
 Real sigmaSB = 5.67051e-5; //erg / cm^2 / K^4
@@ -172,6 +172,11 @@ bool diff_rot_exp;
 
 bool update_gm2_sep; //change gm2 as a function of separation
 Real dmin = 1.e99;
+
+std::string kap_tableL,kap_tableH; // opacity tables for low/high T
+void PreKappaTable(TwoTable *ptable,std::string& kap_tableL, const std::string& kap_tableH);
+Real GetKappa(TwoTable *ptable,Real rho, Real T);
+TwoTable *ptable;
 
 //======================================================================================
 //! \fn void Mesh::InitUserMeshData(ParameterInput *pin)
@@ -251,8 +256,12 @@ void Mesh::InitUserMeshData(ParameterInput *pin)
 
   // locally deposited energy
   is_local_dep = pin->GetOrAddBoolean("problem","is_local_dep",false);
+  x_dep = pin->GetOrAddReal("problem","x_dep",0.0);
+  y_dep = pin->GetOrAddReal("problem","y_dep",0.0);
+  z_dep = pin->GetOrAddReal("problem","z_dep",0.0);
+  r_dep = pin->GetOrAddReal("problem","r_dep",0.0);
+  deltaE = pin->GetOrAddReal("problem","deltaE",0.0);
   
-
  
 
   // local vars
@@ -409,7 +418,23 @@ void Mesh::InitUserMeshData(ParameterInput *pin)
     is_restart=1;
     trackfile_next_time=time;
   }
-  
+
+  if (KAPPA_ENABLED) {
+    // Create an instance of the TwoTable class
+    try {
+      ptable = new TwoTable();
+    } catch (const std::bad_alloc& e) {
+      std::cerr << "Memory allocation failed: " << e.what() << std::endl;
+      return ;
+    }
+    // Read opacity tables for low and high temperature
+    kap_tableL = pin->GetOrAddString("problem","kap_tableL","kappa_lowT.dat");
+    kap_tableH = pin->GetOrAddString("problem","kap_tableH","kappa_highT.dat");
+    PreKappaTable(ptable,kap_tableL,kap_tableH);
+  } else {
+    kap_tableL = "none";
+    kap_tableH = "none";
+  }
     
   // Print out some info
   if (Globals::my_rank==0){
@@ -452,6 +477,16 @@ void Mesh::InitUserMeshData(ParameterInput *pin)
     std::cout << "==========================================================\n";
     std::cout << "cooling = " << cooling <<"\n";
     std::cout << "==========================================================\n";
+    if (KAPPA_ENABLED) {
+      std::cout << "==========   Opacity Tables =============================\n";
+      std::cout << "==========================================================\n";
+      std::cout << "using high temperature kappa table = " << kap_tableH <<"\n";
+      std::cout << "using low temperature kappa table = " << kap_tableL <<"\n";
+      std::cout << "==========================================================\n";
+    } else {
+      std::cout << "Opacity tables not enabled.\n";
+      std::cout << "==========================================================\n";
+    }
   }
   
     
@@ -551,7 +586,22 @@ Real kappa(Real rho, Real T)
 }
 
 
+void PreKappaTable(TwoTable *ptable,std::string& kap_tableL, const std::string& kap_tableH)
+{    
+  // Preload the opacity tables
+  ptable->preTwoTable(kap_tableL, kap_tableH);
+}
 
+Real GetKappa(TwoTable *ptable,Real rho, Real T)
+{
+  Real logT=log10(T);
+  Real logRho=log10(rho);
+  Real logR = logRho - 3*logT + 18;
+  // Get the opacity from the table
+  Real logKappa = ptable->GetOpacity(logR, logT);
+  Real kappa = pow(10,logKappa);
+  return kappa;
+}
 
 
 
@@ -762,9 +812,6 @@ void TwoPointMass(MeshBlock *pmb, const Real time, const Real dt,  const AthenaA
   // Apply locally deposited energy
   if (is_local_dep && vol_dep && time>t_relax){
     localEnergyDeposition(pmb,vol_dep);
-
-    // only do one time
-    is_local_dep=false;
   }
 
 }
@@ -778,14 +825,30 @@ void ConductiveRadiation(HydroDiffusion *phdif, MeshBlock *pmb,
   for (int k=pmb->ks-NGHOST; k<=pmb->ke+NGHOST; k++) {
     for (int j=pmb->js-NGHOST; j<=pmb->je+NGHOST; j++) {
       for (int i=pmb->is-NGHOST; i<=pmb->ie+NGHOST; i++) {
-        Real kap = kappa(w(IDN,k,j,i),w(IPR,k,j,i)); 
-        Real temp = w(IPR,k,j,i) / w(IDN,k,j,i) * 0.625 / (kB/mH);
-        // convert to conduction coefficient
-        phdif->kappa(phdif->DiffProcess::iso,k,j,i) = 16*sigmaSB*
-          pow(temp,3) / (3.0*kap*w(IDN,k,j,i));
-        // convert to unitless
-        phdif->kappa(phdif->DiffProcess::iso,k,j,i) *= kB/(0.625*mH)/
-          w(IDN,k,j,i);
+        if (KAPPA_ENABLED) {
+          Real temp = w(IPR,k,j,i) / w(IDN,k,j,i) * 0.625 / (kB/mH);
+          Real kap = GetKappa(ptable,w(IDN,k,j,i),temp); 
+          // convert to conduction coefficient
+          phdif->kappa(phdif->DiffProcess::iso,k,j,i) = 16*sigmaSB*
+            pow(temp,3) / (3.0*kap*w(IDN,k,j,i));
+          // convert to unitless
+          phdif->kappa(phdif->DiffProcess::iso,k,j,i) *= (0.625*mH)/kB/w(IDN,k,j,i);
+          if (phdif->kappa(phdif->DiffProcess::iso,k,j,i)<0.1) {
+            // phdif->kappa(phdif->DiffProcess::iso,k,j,i) =0.1;
+            std::cout<<"kappa="<<phdif->kappa(phdif->DiffProcess::iso,k,j,i)<<"\n";
+          }
+        } else {
+          std::cout<<"Analytical formula of opacity is used."<<"\n";
+          Real kap = kappa(w(IDN,k,j,i),w(IPR,k,j,i)); 
+          Real temp = w(IPR,k,j,i) / w(IDN,k,j,i) * 0.625 / (kB/mH);
+          // convert to conduction coefficient
+          phdif->kappa(phdif->DiffProcess::iso,k,j,i) = 16*sigmaSB*
+            pow(temp,3) / (3.0*kap*w(IDN,k,j,i));
+          // convert to unitless
+          phdif->kappa(phdif->DiffProcess::iso,k,j,i) *= (0.625*mH)/kB/
+            w(IDN,k,j,i);
+        }
+
       
       }
     }
@@ -884,14 +947,6 @@ void MeshBlock::ProblemGenerator(ParameterInput *pin)
 
 void localEnergyDeposition(MeshBlock *pmb, Real vol_dep)
 {
-  Real x_dep=-3331555000000.0;
-  Real y_dep=887170100000.0;
-  Real z_dep=0.001275073;
-  Real v_dep=7794373.615662262;
-  Real r_dep=7149200000.0;
-
-  // deposited energy and volume
-  Real deltaE=2.9143644302143325e+41;
   Coordinates *pco = pmb->pcoord;
 
   for (int k=pmb->ks; k<=pmb->ke; k++) {
@@ -912,6 +967,7 @@ void localEnergyDeposition(MeshBlock *pmb, Real vol_dep)
         bool is_in_cell=IsPointInCell(pco,x_dep,y_dep,z_dep,k,j,i);
         
         if (d_ij<=r_dep or is_in_cell){
+          std::cout<<"energy density changed by a factor of"<< deltaE/vol_dep/pmb->phydro->u(IEN,k,j,i)  <<"\n";
           pmb->phydro->u(IEN,k,j,i)+=deltaE/vol_dep;
         }
 
@@ -919,20 +975,12 @@ void localEnergyDeposition(MeshBlock *pmb, Real vol_dep)
     }
   }// end of loop over cells
 
-  //print some information
-  std::cout<<"energy deposited locally \n";
   return;
 }
 
 
 Real getVolumeOfDeposition(Mesh *pm)
 {
-  Real x_dep=-3331555000000.0;
-  Real y_dep=887170100000.0;
-  Real z_dep=0.001275073;
-  Real v_dep=7794373.615662262;
-  Real r_dep=7149200000.0;
-
   Real vol_dep=0.0;
 
   // Loop over MeshBlocks
@@ -956,9 +1004,6 @@ Real getVolumeOfDeposition(Mesh *pm)
 
         Real d_ij=pow(pow((x-x_dep),2)+pow((y-y_dep),2)+pow((z-z_dep),2),0.5);
         bool is_in_cell=IsPointInCell(pco,x_dep,y_dep,z_dep,k,j,i);
-        if (is_in_cell){
-          std::cout<<"in cell \n";
-        }
         
         if (d_ij<=r_dep or is_in_cell){
           vol_dep+=pco->GetCellVolume(k,j,i);
@@ -991,11 +1036,11 @@ bool IsPointInCell(Coordinates *pcoord, Real x, Real y, Real z, int k, int j, in
   Real ph=acos(x/r_xy);
 
   // normalize to 0~pi for theta and 0~2pi for ph
-  th = fmod(oh, PI); 
+  th = fmod(th, PI); 
   if (th < 0) {
     th += PI;
   }
-  ph = fmod(oh, 2*PI);
+  ph = fmod(ph, 2*PI);
   if (ph < 0) {
     ph += 2*PI;
   }
@@ -1102,9 +1147,16 @@ void Mesh::MeshUserWorkInLoop(ParameterInput *pin){
   Real mg,mg_star;
   Mesh *pm = my_blocks(0)->pmy_mesh;
 
-  if (is_local_dep && ncycle==0){
-    vol_dep=getVolumeOfDeposition(pm);
+  if (is_local_dep){
+    if (ncycle==0){
+      vol_dep=getVolumeOfDeposition(pm);
+    }
+    if (time>t_relax) {
+      // only do one time
+      is_local_dep=false;
+    }
   }
+
 
 
   // ONLY ON THE FIRST CALL TO THIS FUNCTION

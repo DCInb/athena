@@ -23,7 +23,7 @@
 #include <fstream>
 #include <iostream>
 #define NARRAY 11502
-#define NGRAV 200
+#define NGRAVL 200
 
 
 // Athena++ headers
@@ -50,7 +50,7 @@ Real Interpolate1DArray(Real *x,Real *y,Real x0, int length);
 void DiodeOuterX1(MeshBlock *pmb, Coordinates *pco, AthenaArray<Real> &prim,FaceField &b,
 		 Real time, Real dt, int is, int ie, int js, int je, int ks, int ke, int ngh);
 
-void TwoPointMass(MeshBlock *pmb, const Real time, const Real dt,  const AthenaArray<Real> *flux,
+void TwoPointMass(MeshBlock *pmb, const Real time, const Real dt,
 		  const AthenaArray<Real> &prim,
 		  const AthenaArray<Real> &prim_scalar, const AthenaArray<Real> &bcc,
 		  AthenaArray<Real> &cons, AthenaArray<Real> &cons_scalar); 
@@ -90,7 +90,7 @@ void SumTrackfileDiagnostics(Mesh *pm, Real (&xi)[3], Real (&vi)[3],
 			     Real &mb, Real &mu,
 			     Real &Eorb, Real &Lz_star, Real &Lz_orb, Real &Lz_ej);
 
-void SumMencProfile(Mesh *pm, Real (&menc)[NGRAV]);
+void SumMencProfile(Mesh *pm, Real (&menc)[NGRAVL]);
 
 Real fspline(Real r, Real eps);
 Real pspline(Real r, Real eps);
@@ -107,7 +107,7 @@ void updateGM2(Real sep);
 Real gamma_gas; 
 Real da,pa; // ambient density, pressure
 Real rho[NARRAY], p[NARRAY], rad[NARRAY], menc_init[NARRAY];  // initial profile
-Real logr[NGRAV],menc[NGRAV]; // enclosed mass profile
+Real logr[NGRAVL],menc[NGRAVL]; // enclosed mass profile
 
 Real GM2, GM1,GM2i; // point masses
 Real rsoft2; // softening length of PM 2
@@ -325,9 +325,9 @@ void Mesh::InitUserMeshData(ParameterInput *pin)
   Real logr_min = log10(rmin);
   Real logr_max = log10(rmax);
   
-  for(int i=0;i<NGRAV;i++){
-    logr[i] = logr_min + (logr_max-logr_min)/(NGRAV-1)*i;
-    menc[i] = Interpolate1DArray(rad,menc_init, pow(10,logr[i]), NGRAV );
+  for(int i=0;i<NGRAVL;i++){
+    logr[i] = logr_min + (logr_max-logr_min)/(NGRAVL-1)*i;
+    menc[i] = Interpolate1DArray(rad,menc_init, pow(10,logr[i]), NGRAVL );
   }
   
 
@@ -545,7 +545,7 @@ Real kappa(Real rho, Real T)
 
 
 // Source Function for two point masses
-void TwoPointMass(MeshBlock *pmb, const Real time, const Real dt,  const AthenaArray<Real> *flux,
+void TwoPointMass(MeshBlock *pmb, const Real time, const Real dt,
 		  const AthenaArray<Real> &prim,
 		  const AthenaArray<Real> &prim_scalar, const AthenaArray<Real> &bcc,
 		  AthenaArray<Real> &cons, AthenaArray<Real> &cons_scalar) 
@@ -612,9 +612,9 @@ void TwoPointMass(MeshBlock *pmb, const Real time, const Real dt,  const AthenaA
 	// PM1
 	//Real a_r1 = -GM1/pow(r,2);
 	// cell volume avg'd version, see pointmass.cpp sourceterm code. 
-	//Real a_r1 = -GM1*pmb->pcoord->coord_src1_i_(i)/r;
-	Real GMenc1 = Ggrav*Interpolate1DArray(logr,menc,log10(r) , NGRAV);
-	Real a_r1 = -GMenc1*pmb->pcoord->coord_src1_i_(i)/r;
+	//Real a_r1 = -GM1*pmb->pcoord->x1v(i)/r;
+	Real GMenc1 = Ggrav*Interpolate1DArray(logr,menc,log10(r) , NGRAVL);
+	Real a_r1 = -GMenc1*pmb->pcoord->x1v(i)/r;
 	//Real a_r1 = -GMenc1/pow(r,2);
 	
 	// PM2 gravitational accels in cartesian coordinates
@@ -701,11 +701,11 @@ void TwoPointMass(MeshBlock *pmb, const Real time, const Real dt,  const AthenaA
 	cons(IM3,k,j,i) += src_3;
 	
 	// update the energy (source = - rho v dot a)
-	//cons(IEN,k,j,i) += src_1*prim(IVX,k,j,i) + src_2*prim(IVY,k,j,i) + src_3*prim(IVZ,k,j,i);
-	cons(IEN,k,j,i) += src_1/den * 0.5*(flux[X1DIR](IDN,k,j,i) + flux[X1DIR](IDN,k,j,i+1));
+	cons(IEN,k,j,i) += src_1*prim(IVX,k,j,i) + src_2*prim(IVY,k,j,i) + src_3*prim(IVZ,k,j,i);
+	// cons(IEN,k,j,i) += src_1/den * 0.5*(flux[X1DIR](IDN,k,j,i) + flux[X1DIR](IDN,k,j,i+1));
 	//cons(IEN,k,j,i) += src_2/den * 0.5*(flux[X2DIR](IDN,k,j,i) + flux[X2DIR](IDN,k,j+1,i)); //not sure why this seg-faults
 	//cons(IEN,k,j,i) += src_3/den * 0.5*(flux[X3DIR](IDN,k,j,i) + flux[X3DIR](IDN,k+1,j,i));
-	cons(IEN,k,j,i) += src_2*prim(IVY,k,j,i) + src_3*prim(IVZ,k,j,i);
+	// cons(IEN,k,j,i) += src_2*prim(IVY,k,j,i) + src_3*prim(IVZ,k,j,i);
 
 
 	
@@ -894,8 +894,8 @@ void MeshBlock::UserWorkInLoop(void)
 	Real r = pcoord->x1v(i);
 	Real Rcyl = r*sin(th);
 	Real den = phydro->u(IDN,k,j,i);
-	Real GMenc1 = Ggrav*Interpolate1DArray(logr,menc,log10(r) , NGRAV);
-	pscalars->s(7,k,j,i) = GMenc1*pcoord->coord_src1_i_(i)*den; // neg epot     	
+	Real GMenc1 = Ggrav*Interpolate1DArray(logr,menc,log10(r) , NGRAVL);
+	pscalars->s(7,k,j,i) = GMenc1*pcoord->x1v(i)*den; // neg epot     	
 
 	if (time<t_relax){
 	  Real vr  = phydro->u(IM1,k,j,i) / den;
@@ -927,7 +927,7 @@ void MeshBlock::UserWorkInLoop(void)
 	  Real ek = 0.5*(SQR(phydro->u(IM1,k,j,i))+SQR(phydro->u(IM2,k,j,i)) + SQR(phydro->u(IM3,k,j,i)))/phydro->u(IDN,k,j,i); 
 	  pscalars->s(4,k,j,i) = phydro->u(IEN,k,j,i) - ek; //ei
 	  pscalars->s(5,k,j,i) = ek; // ek
-	  pscalars->s(6,k,j,i) = GMenc1*pcoord->coord_src1_i_(i)*den; // neg epot
+	  pscalars->s(6,k,j,i) = GMenc1*pcoord->x1v(i)*den; // neg epot
 	
 	}//end time<t_relax
 	
@@ -946,7 +946,7 @@ void MeshBlock::UserWorkInLoop(void)
 //  \brief Function called once every time step for user-defined work.
 //========================================================================================
 
-void Mesh::MeshUserWorkInLoop(ParameterInput *pin){
+void Mesh::UserWorkInLoop(ParameterInput *pin){
 
   Real ai[3],acom[3];
   Real mg,mg_star;
@@ -1072,6 +1072,7 @@ void Mesh::MeshUserWorkInLoop(ParameterInput *pin){
     SignalHandler::SetSignalFlag(SIGTERM); // make a clean exit
   }
 
+  bool user_force_output = false;
   // check whether to trigger forced output
   if ((d<separation_stop_min) ||
       (d>separation_stop_max) ||
@@ -1089,7 +1090,7 @@ void Mesh::MeshUserWorkInLoop(ParameterInput *pin){
   if(ncycle%update_grav_every == 0){
     SumMencProfile(pm,menc);
     if (Globals::my_rank == 0 ){
-      std::cout << "enclosed mass updated... Menc(r=rstar_initial) = " << Interpolate1DArray(logr,menc,log10(rstar_initial), NGRAV) <<"\n";
+      std::cout << "enclosed mass updated... Menc(r=rstar_initial) = " << Interpolate1DArray(logr,menc,log10(rstar_initial), NGRAVL) <<"\n";
     }
   }
 
@@ -1782,9 +1783,9 @@ void SumTrackfileDiagnostics(Mesh *pm, Real (&xi)[3], Real (&vi)[3],
 	  Real d2 = std::sqrt(SQR(x-xi[0]) +
 			      SQR(y-xi[1]) +
 			      SQR(z-xi[2]) );
-	  Real GMenc1 = Ggrav*Interpolate1DArray(logr,menc, log10(r), NGRAV);
+	  Real GMenc1 = Ggrav*Interpolate1DArray(logr,menc, log10(r), NGRAVL);
 	  Real h = gamma_gas * pmb->phydro->w(IPR,k,j,i)/((gamma_gas-1.0)*pmb->phydro->u(IDN,k,j,i));
-	  Real epot = -GMenc1*pmb->pcoord->coord_src1_i_(i) - GM2*pspline(d2,rsoft2);
+	  Real epot = -GMenc1*pmb->pcoord->x1v(i) - GM2*pspline(d2,rsoft2);
 	  Real ek = 0.5*(SQR(vgas[0]-vcom[0]) +SQR(vgas[1]-vcom[1]) +SQR(vgas[2]-vcom[2]));
 	  Real bern = h+ek+epot;
 	  // bound/unbound mass outside of the star (weighted with scalar)
@@ -1813,7 +1814,7 @@ void SumTrackfileDiagnostics(Mesh *pm, Real (&xi)[3], Real (&vi)[3],
 				     + SQR(pmb->phydro->u(IM3,k,j,i)))/pmb->phydro->u(IDN,k,j,i) );
 
 
-	    EPot_star += -GMenc1*pmb->pcoord->coord_src1_i_(i)*dm;
+	    EPot_star += -GMenc1*pmb->pcoord->x1v(i)*dm;
 
 	    Lz_star += pmb->phydro->u(IM3,k,j,i)*vol(i)*r*sin_th;
 	  }else{
@@ -1941,11 +1942,11 @@ void SumTrackfileDiagnostics(Mesh *pm, Real (&xi)[3], Real (&vi)[3],
 
 
 
-void SumMencProfile(Mesh *pm, Real (&menc)[NGRAV]){
+void SumMencProfile(Mesh *pm, Real (&menc)[NGRAVL]){
 
   Real m1 =  GM1/Ggrav;
   // start by setting enclosed mass at each radius to zero
-  for (int ii = 0; ii <NGRAV; ii++){
+  for (int ii = 0; ii <NGRAVL; ii++){
     menc[ii] = 0.0;
   }
   
@@ -1970,7 +1971,7 @@ void SumMencProfile(Mesh *pm, Real (&menc)[NGRAV]){
 	  Real logr_cell = log10( pmb->pcoord->x1v(i) );
 
 	  // loop over radii in profile
-	  for (int ii = 0; ii <NGRAV; ii++){
+	  for (int ii = 0; ii <NGRAVL; ii++){
 	    if( logr_cell < logr[ii] ){
 	      menc[ii] += dm;
 	    }
@@ -1984,17 +1985,17 @@ void SumMencProfile(Mesh *pm, Real (&menc)[NGRAV]){
 #ifdef MPI_PARALLEL
   // sum over all ranks, add m1
   if (Globals::my_rank == 0) {
-    for (int ii = 0; ii <NGRAV; ii++){
+    for (int ii = 0; ii <NGRAVL; ii++){
       menc[ii] += m1;
     }
-    MPI_Reduce(MPI_IN_PLACE, menc, NGRAV, MPI_ATHENA_REAL, MPI_SUM, 0,MPI_COMM_WORLD);
+    MPI_Reduce(MPI_IN_PLACE, menc, NGRAVL, MPI_ATHENA_REAL, MPI_SUM, 0,MPI_COMM_WORLD);
   } else {
-    MPI_Reduce(menc,menc,NGRAV, MPI_ATHENA_REAL, MPI_SUM, 0,MPI_COMM_WORLD);
+    MPI_Reduce(menc,menc,NGRAVL, MPI_ATHENA_REAL, MPI_SUM, 0,MPI_COMM_WORLD);
   }
 
   
   // and broadcast the result
-  MPI_Bcast(menc,NGRAV,MPI_ATHENA_REAL,0,MPI_COMM_WORLD);
+  MPI_Bcast(menc,NGRAVL,MPI_ATHENA_REAL,0,MPI_COMM_WORLD);
 #endif
     
 }
