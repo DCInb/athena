@@ -49,7 +49,7 @@ void __attribute__((weak)) Mesh::InitUserMeshData(ParameterInput *pin) {
 //! \brief Function called once every time step for user-defined work.
 //========================================================================================
 
-void __attribute__((weak)) Mesh::UserWorkInLoop() {
+void __attribute__((weak)) Mesh::UserWorkInLoop(ParameterInput *pin) {
   // do nothing
   return;
 }

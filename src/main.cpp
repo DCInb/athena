@@ -529,7 +529,7 @@ int main(int argc, char *argv[]) {
         pststlist->DoTaskListOneStage(pmesh, stage);
     }
 
-    pmesh->UserWorkInLoop();
+    pmesh->UserWorkInLoop(pinput);//Mengqi 250612 changed to let print trackfile
 
     pmesh->ncycle++;
     pmesh->time += pmesh->dt;
