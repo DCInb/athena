@@ -110,4 +110,4 @@ trackfile_dt = 1e4
 update_grav_every =10
 
 d_insp = 7.7e12
-v_insp = 0
+v_insp = 1e5
