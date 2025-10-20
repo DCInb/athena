@@ -40,7 +40,8 @@ meshtest.dat
 *.err
 *.output
 *.dat
-job.slurm
+data/
+vis/
 
 # Visualization package files
 .smhist

@@ -32,8 +32,8 @@ dt         = 1e99      # time increment between outputs
 
 <time>
 cfl_number = 0.3        # The Courant, Friedrichs, & Lewy (CFL) Number
-nlim       = -1       # cycle limit
-tlim       = 3.15e8       # time limit
+nlim       = 200       # cycle limit
+tlim       = 5e8       # time limit
 integrator = vl2
 xorder = 2
 
@@ -63,51 +63,32 @@ refinement     = static
 #numlevel       = 2
 #deref_count    = 5
 
-<refinement1>
+<Norefinement1>
 level = 1
-x1min = 4.9e12
-x1max = 8.4e12
-x2min = 1.3744467859455345
-x2max = 1.7671458676442586
+x1min = 4868500000000.0
+x1max = 9041500000000.0
+x2min = 1.0471975511965976
+x2max = 2.0943951023931953
 x3min = 0
 x3max = 6.283185307179586
 
 <Norefinement2>
-level = 1
-x1min = 3.74179e10
-x1max = 1.04325e11
-x2min = 0.9817477042468103
-x2max = 2.1598449493429825 #3.141592653589793 #2.55
+level = 2
+x1min = 5564000000000.0
+x1max = 8346000000000.0
+x2min = 1.3089969389957472
+x2max = 1.8325957145940461
 x3min = 0
 x3max = 6.283185307179586
 
 <Norefinement3>
-level = 2
-x1min = 4.173e10
-x1max = 8.69375e10
-x2min = 1.3744467859455345
-x2max = 1.7671458676442586
+level = 3
+x1min = 6259500000000.0
+x1max = 7650500000000.001
+x2min = 1.4398966328953218
+x2max = 1.7016960206944711
 x3min = 0
 x3max = 6.283185307179586
-
-
-#<refinement4>
-#level = 2
-#x1min = 6e12
-#x1max = 1.2e13
-#x2min = 1.17079632679
-#x2max = 1.97079632679
-#x3min = 0
-#x3max = 6.283185307179586
-
-#<refinement5>
-#level = 2
-#x1min = 6e12
-#x1max = 2e13
-#x2min = 1.37079632679
-#x2max = 1.77079632679
-#x3min = 0
-#x3max = 6.283185307179586
 
 
 
@@ -123,10 +104,10 @@ nx3        = 32        # Number of zones per MeshBlock in X3-direction
 <hydro>
 gamma           = 1.66667  # gamma = C_p/C_v
 iso_sound_speed = 1.0
-dfloor = 1.0e-14
-pfloor = 3.0e-2
+dfloor = 1.0e-15
+pfloor = 1.0e-3
 
-polar_average = true
+polar_average = false
 polar_average_mode = 1
 
 <problem>
@@ -144,7 +125,7 @@ pamb          = 1.0e-99           # ambient pressure
 damb          = 1.0e-99
 
 
-trelax        =   2e6  # relax (damping) for this time
+trelax        =   1.e7  # relax (damping) for this time
 tau_relax_start = 1.e5 # initial damping timescale
 tau_relax_end   = 1.e7
 t_mass_on     = 1.e1     #1.5e5   # then turn on the secondary linearly over this time, NB: ignored in corotating frame

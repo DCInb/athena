@@ -45,7 +45,7 @@
 
 
 Real Interpolate1DArrayEven(Real *x,Real *y,Real x0, int length);
-Real Interpolate1DArray(Real *x,Real *y,Real x0, int length);
+Real Interpolate1DArray(Real *x,Real *y, Real x0, int length);
 
 void DiodeOuterX1(MeshBlock *pmb, Coordinates *pco, AthenaArray<Real> &prim,FaceField &b,
 		 Real time, Real dt, int is, int ie, int js, int je, int ks, int ke, int ngh);
@@ -72,7 +72,7 @@ int RefinementCondition(MeshBlock *pmb);
 
 void cross(Real (&A)[3],Real (&B)[3],Real (&AxB)[3]);
 
-void WritePMTrackfile(Mesh *pm, ParameterInput *pin);
+void WritePMTrackfile(Mesh *pm);
 
 Real GetGM2factor(Real time, Real sep);
 
@@ -298,7 +298,7 @@ void Mesh::InitUserMeshData(ParameterInput *pin)
 
     
   // read in profile arrays from file
-  std::ifstream infile("polytrope.dat"); 
+  std::ifstream infile("profile.dat"); 
   for(int i=0;i<NARRAY;i++){
     infile >> rad[i] >> rho[i] >> p[i] >> menc_init[i];
     //std:: cout << rad[i] << "    " << rho[i] << std::endl;
@@ -312,8 +312,6 @@ void Mesh::InitUserMeshData(ParameterInput *pin)
     p[i]   = p[i]*Ggrav*pow(mstar_initial,2)/pow(rstar_initial,4);
     menc_init[i] = menc_init[i]*mstar_initial;
   }
-
-  
   
   // set the inner point mass based on excised mass
   Real menc_rin = Interpolate1DArray(rad,menc_init, rmin, NARRAY );
@@ -614,7 +612,7 @@ void TwoPointMass(MeshBlock *pmb, const Real time, const Real dt,
 	// cell volume avg'd version, see pointmass.cpp sourceterm code. 
 	//Real a_r1 = -GM1*pmb->pcoord->x1v(i)/r;
 	Real GMenc1 = Ggrav*Interpolate1DArray(logr,menc,log10(r) , NGRAVL);
-	Real a_r1 = -GMenc1*pmb->pcoord->x1v(i)/r;
+	Real a_r1 = -GMenc1/pow(r,2);
 	//Real a_r1 = -GMenc1/pow(r,2);
 	
 	// PM2 gravitational accels in cartesian coordinates
@@ -946,7 +944,7 @@ void MeshBlock::UserWorkInLoop(void)
 //  \brief Function called once every time step for user-defined work.
 //========================================================================================
 
-void Mesh::UserWorkInLoop(ParameterInput *pin){
+void Mesh::UserWorkInLoop(){
 
   Real ai[3],acom[3];
   Real mg,mg_star;
@@ -1111,7 +1109,7 @@ void Mesh::UserWorkInLoop(ParameterInput *pin){
     SumTrackfileDiagnostics(pm, xi, vi, lp, lg, ldo,
 			    EK, EPot, EI, Edo, EK_star, EPot_star, EI_star, EK_ej, EPot_ej, EI_ej, M_star, mr1, mr12,mb,mu,
 			    Eorb, Lz_star, Lz_orb,Lz_ej);
-    WritePMTrackfile(pm,pin);
+    WritePMTrackfile(pm);
   }
 
   // std output
@@ -1123,7 +1121,7 @@ void Mesh::UserWorkInLoop(ParameterInput *pin){
 }
 
 
-void WritePMTrackfile(Mesh *pm, ParameterInput *pin){
+void WritePMTrackfile(Mesh *pm){
   
   if (Globals::my_rank == 0) {
     std::string fname;
@@ -1290,7 +1288,6 @@ void drift(Real dt,Real (&xi)[3],Real (&vi)[3],Real (&ai)[3]){
 }
 
 void ParticleAccels(Real (&xi)[3],Real (&vi)[3],Real (&ai)[3]){
-
   Real d = sqrt(xi[0]*xi[0] + xi[1]*xi[1] + xi[2]*xi[2]);
 
   // fill in the accelerations for the orbiting frame
@@ -2096,7 +2093,7 @@ Real Interpolate1DArrayEven(Real *x,Real *y,Real x0, int length){
   return -9999.9;
 }
 
-Real Interpolate1DArray(Real *x,Real *y,Real x0, int length){ 
+Real Interpolate1DArray(Real *x,Real *y, Real x0, int length){ 
   // check the lower bound
   if(x[0] >= x0){
     //std::cout << "hit lower bound!\n";

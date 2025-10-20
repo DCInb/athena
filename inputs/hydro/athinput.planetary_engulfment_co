@@ -1,0 +1,113 @@
+<job>
+problem_id = PEGM       # problem ID: basename of output filenames
+
+<output1>
+file_type  = hdf5       # Binary data dump
+variable   = prim       # variables to be output
+dt         = 5.e5       # time increment between outputs
+xdmf=0
+
+<output2>
+file_type  = hst        # history
+dt         = 5.e5       # time increment between outputs
+
+<time>
+cfl_number = 0.3        # The Courant, Friedrichs, & Lewy (CFL) Number
+nlim       = -1         # cycle limit
+tlim       = 5e8        # time limit
+integrator = vl2
+xorder = 2
+
+<mesh>
+nx1        = 64                 # Number of zones in X1-direction
+x1rat      = 1.0301528614336024  # ratio between adjacent cell sizes
+x1min      = 7e11                # minimum value of X1
+x1max      = 3.5e13              # maximum value of X1
+ix1_bc     = reflecting          # inner-X1 boundary flag
+ox1_bc     = user                # outer-X1 boundary flag
+
+nx2        = 96                  # Number of zones in X2-direction
+x2min      = 0.0                 # minimum value of X2
+x2max      = 3.141592653589793   # maximum value of X2
+ix2_bc     = polar               # inner-X2 boundary flag
+ox2_bc     = polar               # outer-X2 boundary flag
+
+nx3        = 64                 # Number of zones in X3-direction
+x3min      = 0.0                 # minimum value of X3
+x3max      = 6.283185307179586   # maximum value of X3
+ix3_bc     = periodic            # inner-X3 boundary flag
+ox3_bc     = periodic            # outer-X3 boundary flag
+
+num_threads = 1                  # Number of OpenMP threads per process
+
+refinement      = static
+#numlevel       = 1
+#deref_count    = 1
+
+<refinement1>
+level = 1
+x1min = 6.9e12 
+x1max = 7.1e12
+x2min = 1.56
+x2max = 1.58
+x3min = 0
+x3max = 6.283185307179586
+
+<refinement2>
+level = 2
+x1min = 6.9e12 
+x1max = 7.1e12
+x2min = 1.56
+x2max = 1.58
+x3min = 0
+x3max = 6.283185307179586
+
+<refinement3>
+level = 3
+x1min = 6.9e12 
+x1max = 7.1e12
+x2min = 1.56
+x2max = 1.58
+x3min = 0
+x3max = 6.283185307179586
+
+<refinement4>
+level = 4
+x1min = 6.9e12 
+x1max = 7.1e12
+x2min = 1.56
+x2max = 1.58
+x3min = 0
+x3max = 6.283185307179586
+
+<meshblock>
+nx1        = 16        # Number of zones per MeshBlock in X1-direction
+nx2        = 16        # Number of zones per MeshBlock in X2-direction
+nx3        = 16        # Number of zones per MeshBlock in X3-direction
+
+<hydro>
+gamma  = 1.66667  # gamma = C_p/C_v
+dfloor = 1.0e-15
+pfloor = 1.0e-3
+
+<problem>
+# cgs 
+Ggrav           = 6.674e-8
+GM2             = 6.3343267e23
+rstar_initial   = 7.e12  
+mstar_initial   = 1.9773e33 
+
+rsoft2          = 7149200000.0
+sma             = 1.4e13
+ecc             = 0
+ 
+t_relax = 0
+tau_relax = 1e6
+
+n_particle_substeps = 2
+separation_stop_min = 0.7e12
+trackfile_dt = 1e4
+update_grav_every =10
+
+d_insp = 7.7e12
+v_insp = 0
