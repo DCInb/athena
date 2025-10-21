@@ -479,7 +479,7 @@ void ParticleAccels(Real (&xi)[3],Real (&vi)[3],Real (&ai)[3]) {
 
     if (d>=d_insp) {
       // add the artificial inspiral friction
-      ai[i] += -GM1 * vi[i] /2/d/d/v/v * v_insp;
+      ai[i] += -Ggrav * mstar_initial * vi[i] /2/d/d/v/v * v_insp;
     }
   }
 
