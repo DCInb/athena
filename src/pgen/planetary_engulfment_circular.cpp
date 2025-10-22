@@ -12,7 +12,7 @@
 #include <stdexcept>
 #include <fstream>
 #include <iostream>
-#define NARRAY 11502   // length of profile
+#define NARRAY 51102   // length of profile
 #define NGRAVL 200
 
 

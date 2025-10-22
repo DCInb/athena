@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PGEN="planetary_engulfment_circular"
-DIR="planetary_engulfment_testModule"
+DIR="planetary_engulfment_testrelax"
 # python configure_tacc.py -sts --prob $DIR1 --coord spherical_polar -mpi -omp -hdf5 --cflag "$TACC_VEC_FLAGS" --nscalars=9 
 
 module purge
@@ -18,7 +18,7 @@ fi
 
 mkdir -p "data/$DIR"
 cd data/$DIR
-cp ../polytrope.dat profile.dat
+cp ../mesa_giant_csc1.7e6.dat profile.dat
 cp ../../inputs/hydro/athinput.planetary_engulfment_co athinput.planetary_engulfment
 cp ../job_new.slurm job.slurm
 
