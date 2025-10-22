@@ -19,5 +19,5 @@ cd data/$DIR
 cp ../../inputs/mhd/athinput.collision athinput.collision
 cp ../job_collision.slurm job.slurm
 
-mpirun -np $SLURM_NPROCS ../../bin/athena -i athinput.collision
-# sbatch job.slurm
+# mpirun -np $SLURM_NPROCS ../../bin/athena -i athinput.collision
+sbatch job.slurm

@@ -20,9 +20,9 @@ xorder = 2
 
 <mesh>
 nx1        = 128                 # Number of zones in X1-direction
-x1rat      = 1.0301528614336024  # ratio between adjacent cell sizes
+x1rat      = 1.0369266382873439  # ratio between adjacent cell sizes
 x1min      = 7e11                # minimum value of X1
-x1max      = 3.5e13              # maximum value of X1
+x1max      = 7e13                # maximum value of X1
 ix1_bc     = reflecting          # inner-X1 boundary flag
 ox1_bc     = user                # outer-X1 boundary flag
 
