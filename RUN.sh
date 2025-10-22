@@ -22,5 +22,5 @@ cp ../mesa_giant_csc1.7e6.dat profile.dat
 cp ../../inputs/hydro/athinput.planetary_engulfment_co athinput.planetary_engulfment
 cp ../job_new.slurm job.slurm
 
-# mpirun -np $SLURM_NPROCS ../../bin/athena -i athinput.planetary_engulfment
-sbatch job.slurm
+mpirun -np $SLURM_NPROCS ../../bin/athena -i athinput.planetary_engulfment
+# sbatch job.slurm

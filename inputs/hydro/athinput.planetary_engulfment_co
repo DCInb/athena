@@ -94,7 +94,7 @@ pfloor = 1.0e-3
 # cgs 
 Ggrav           = 6.674e-8
 GM2             = 0
-rstar_initial   = 7.e12  
+rstar_initial   = 7000045096161.662 
 mstar_initial   = 1.9773e33 
 
 rsoft2          = 7149200000.0
