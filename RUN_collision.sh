@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PGEN="collision"
-DIR="collision_test"
+DIR="collision_denturb_hR"
 
 module purge
 source .bashrc_athena

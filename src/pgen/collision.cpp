@@ -12,7 +12,7 @@
 #include <stdexcept>
 #include <fstream>
 #include <iostream>
-
+#include <random>
 
 // Athena++ headers
 #include "../athena.hpp"
@@ -34,6 +34,9 @@ namespace {
 Real den0, v0, b0;
 Real a0, ky_over_2pi, kz_over_2pi;
 Real ky, kz;
+Real isDenTurb, denTurb;
+std::mt19937 gen(12345);
+std::uniform_real_distribution<> dist(0.0, 1.0);
 }
 
 //========================================================================================
@@ -52,6 +55,8 @@ void Mesh::InitUserMeshData(ParameterInput *pin) {
 	a0            = pin->GetOrAddReal("problem","a0",1);
 	ky_over_2pi   = pin->GetOrAddReal("problem","ky_over_2pi",1);
 	kz_over_2pi   = pin->GetOrAddReal("problem","kz_over_2pi",1);
+  isDenTurb     = pin->GetOrAddBoolean("problem","isDenTurb",false);
+  denTurb       = pin->GetOrAddReal("problem","denTurb",0);
 
 	ky = ky_over_2pi * 2 * PI;
 	kz = kz_over_2pi * 2 * PI;
@@ -74,6 +79,13 @@ void MeshBlock::ProblemGenerator(ParameterInput *pin) {
 
         // set the density
 	    	phydro->u(IDN,k,j,i) = den0;
+        if (isDenTurb) {
+          a0=0;
+          if (dist(gen)>0.9){
+            phydro->u(IDN,k,j,i) += denTurb * dist(gen);
+          }
+        }
+        
         // set the momenta components
 				if (x > a0 * sin(ky*y) * sin(kz*z)) {
 					phydro->u(IM1,k,j,i) = - den0 * v0;	

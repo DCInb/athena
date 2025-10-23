@@ -12,7 +12,7 @@
 #include <stdexcept>
 #include <fstream>
 #include <iostream>
-#define NARRAY 11502   // length of profile
+#define NARRAY 2527   // length of profile
 #define NGRAVL 200
 
 
@@ -61,7 +61,7 @@ Real d_insp, v_insp;
 void DiodeOuterX1(MeshBlock *pmb, Coordinates *pco, AthenaArray<Real> &prim,FaceField &b,
 		 Real time, Real dt, int is, int ie, int js, int je, int ks, int ke, int ngh);
 void TwoPointMass(MeshBlock *pmb, const Real time, const Real dt,
-		  const AthenaArray<Real> &prim,
+		  const AthenaArray<Real> &prim, const AthenaArray<Real> *flux,
 		  const AthenaArray<Real> &prim_scalar, const AthenaArray<Real> &bcc,
 		  AthenaArray<Real> &cons, AthenaArray<Real> &cons_scalar); 
 
@@ -717,9 +717,9 @@ void DiodeOuterX1(MeshBlock *pmb, Coordinates *pco, AthenaArray<Real> &prim,
 
 // Source Function for two point masses
 void TwoPointMass(MeshBlock *pmb, const Real time, const Real dt,
-		  const AthenaArray<Real> &prim,
+		  const AthenaArray<Real> &prim, const AthenaArray<Real> *flux,
 		  const AthenaArray<Real> &prim_scalar, const AthenaArray<Real> &bcc,
-		  AthenaArray<Real> &cons, AthenaArray<Real> &cons_scalar) { 
+		  AthenaArray<Real> &cons, AthenaArray<Real> &cons_scalar) {
   // Gravitational acceleration from orbital motion
   for (int k=pmb->ks; k<=pmb->ke; k++) {
     Real ph= pmb->pcoord->x3v(k);
@@ -751,8 +751,11 @@ void TwoPointMass(MeshBlock *pmb, const Real time, const Real dt,
 	      //  COMPUTE ACCELERATIONS
         //
         // a averaged version is in pointmass.cpp
-        Real a_r1 = -GM1/pow(r,2);
-	      Real a_sg = -Ggrav*Interpolate1DArray(logr, menc, log10(r), NGRAVL)/pow(r,2)-a_r1;
+        Real a_r1 = -GM1*pmb->pcoord->coord_src1_i_(i)/r;
+	      Real a_sg = -Ggrav*Interpolate1DArray(logr, menc, log10(r), NGRAVL) *
+                    pmb->pcoord->coord_src1_i_(i)/r-a_r1;
+        // Real a_r1 = 0;
+        // Real a_sg = -Ggrav*Interpolate1DArray(logr, menc, log10(r), NGRAVL) / pow(r,2);
 	
 	      // PM2 gravitational accels in cartesian coordinates
 	      Real a_x = - GM2 * fspline(d2,rsoft2) * (x-x_2);   
@@ -787,13 +790,17 @@ void TwoPointMass(MeshBlock *pmb, const Real time, const Real dt,
 	      Real src_2 = dt*den*a_th;
 	      Real src_3 = dt*den*a_ph;
 
-	      // add the source term to the momenta  (source = - rho * a)
+	      // add the source term to the momenta  (source = - den * a * dt)
 	      cons(IM1,k,j,i) += src_1;
 	      cons(IM2,k,j,i) += src_2;
 	      cons(IM3,k,j,i) += src_3;
 	
-	      // update the energy (source = - rho v dot a)
-	      cons(IEN,k,j,i) += src_1*prim(IVX,k,j,i) + src_2*prim(IVY,k,j,i) + src_3*prim(IVZ,k,j,i);
+	      // update the energy (source = - den * dt * v dot a)
+	      // cons(IEN,k,j,i) += src_1*prim(IVX,k,j,i) + src_2*prim(IVY,k,j,i) + src_3*prim(IVZ,k,j,i);
+        cons(IEN,k,j,i) += dt*a_r  * 0.5*(flux[X1DIR](IDN,k,j,i) + flux[X1DIR](IDN,k,j,i+1));
+	      cons(IEN,k,j,i) += dt*a_th * 0.5*(flux[X2DIR](IDN,k,j,i) + flux[X2DIR](IDN,k,j+1,i)); 
+	      cons(IEN,k,j,i) += dt*a_ph * 0.5*(flux[X3DIR](IDN,k,j,i) + flux[X3DIR](IDN,k+1,j,i));
+        // cons(IEN,k,j,i) += src_2*prim(IVY,k,j,i) + src_3*prim(IVZ,k,j,i);
       }
     }
   } // end loop over cells

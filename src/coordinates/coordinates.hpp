@@ -51,6 +51,8 @@ class Coordinates {
   // geometry coefficients (only used in SphericalPolar, Cylindrical, Cartesian)
   AthenaArray<Real> h2f, dh2fd1, h31f, h32f, dh31fd1, dh32fd2;
   AthenaArray<Real> h2v, dh2vd1, h31v, h32v, dh31vd1, dh32vd2;
+  AthenaArray<Real> coord_src1_i_;
+  AthenaArray<Real> phy_src1_i_, phy_src2_i_;
 
   // functions...
   // ...to compute length of edges
@@ -255,14 +257,14 @@ class Coordinates {
   AthenaArray<Real> coord_width3_kji_;
   AthenaArray<Real> coord_src_j1_, coord_src_j2_;
   AthenaArray<Real> coord_src_kji_;
-  AthenaArray<Real> coord_src1_i_;
+  // AthenaArray<Real> coord_src1_i_; // not protect for point mass src
   AthenaArray<Real> coord_src1_j_;
   AthenaArray<Real> coord_src2_i_;
   AthenaArray<Real> coord_src2_j_;
   AthenaArray<Real> coord_src3_j_;
 
   // Scratch arrays for physical source terms
-  AthenaArray<Real> phy_src1_i_, phy_src2_i_;
+  // AthenaArray<Real> phy_src1_i_, phy_src2_i_; // not protect for point mass src
 
   // GR-specific scratch arrays
   AthenaArray<Real> metric_cell_i1_, metric_cell_i2_;
