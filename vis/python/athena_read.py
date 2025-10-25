@@ -510,12 +510,14 @@ def athdf(filename, raw=False, data=None, quantities=None, dtype=None, level=Non
                 def center_func_2(xm, xp):
                     return 0.5 * (xm+xp)
             elif coord == 'spherical_polar':
+                # def center_func_2(xm, xp):
+                #     sm = np.sin(xm)
+                #     cm = np.cos(xm)
+                #     sp = np.sin(xp)
+                #     cp = np.cos(xp)
+                #     return (sp-xp*cp - sm+xm*cm) / (cm - cp)
                 def center_func_2(xm, xp):
-                    sm = np.sin(xm)
-                    cm = np.cos(xm)
-                    sp = np.sin(xp)
-                    cp = np.cos(xp)
-                    return (sp-xp*cp - sm+xm*cm) / (cm - cp)
+                    return 0.5 * (xm+xp)
             elif coord == 'schwarzschild':
                 def center_func_2(xm, xp):
                     return np.arccos(0.5 * (np.cos(xm) + np.cos(xp)))

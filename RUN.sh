@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PGEN="planetary_engulfment_circular"
-DIR="planetary_engulfment_testrelax_v1"
+DIR="planetary_engulfment_testinsp"
 # python configure_tacc.py -sts --prob $DIR1 --coord spherical_polar -mpi -omp -hdf5 --cflag "$TACC_VEC_FLAGS" --nscalars=9 
 
 module purge

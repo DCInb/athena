@@ -14,7 +14,7 @@ dt         = 5.e5       # time increment between outputs
 <time>
 cfl_number = 0.3        # The Courant, Friedrichs, & Lewy (CFL) Number
 nlim       = -1         # cycle limit
-tlim       = 3e7        # time limit
+tlim       = 1e8        # time limit
 integrator = vl2
 xorder = 2
 
@@ -93,12 +93,12 @@ pfloor = 1.0e-3
 <problem>
 # cgs 
 Ggrav           = 6.674e-8
-GM2             = 0
+GM2             = 6.3343267e23
 rstar_initial   = 7000045096161.662 
 mstar_initial   = 1.9773e33 
 
 rsoft2          = 7149200000.0
-sma             = 1.4e13
+sma             = 7.7e12
 ecc             = 0
  
 t_relax = 1e7
@@ -109,5 +109,5 @@ separation_stop_min = 0.7e12
 trackfile_dt = 1e4
 update_grav_every =10
 
-d_insp = 7.7e12
+d_insp = 7.7e13
 v_insp = 1e5

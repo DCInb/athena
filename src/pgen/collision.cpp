@@ -81,16 +81,16 @@ void MeshBlock::ProblemGenerator(ParameterInput *pin) {
 	    	phydro->u(IDN,k,j,i) = den0;
         if (isDenTurb) {
           a0=0;
-          if (dist(gen)>0.9){
+          if (dist(gen)>0.9 and abs(x)<1.0){
             phydro->u(IDN,k,j,i) += denTurb * dist(gen);
           }
         }
         
         // set the momenta components
 				if (x > a0 * sin(ky*y) * sin(kz*z)) {
-					phydro->u(IM1,k,j,i) = - den0 * v0;	
+					phydro->u(IM1,k,j,i) = - phydro->u(IDN,k,j,i) * v0;	
 				} else {
-					phydro->u(IM1,k,j,i) = den0 * v0;	
+					phydro->u(IM1,k,j,i) = phydro->u(IDN,k,j,i) * v0;	
 				}
 	    	phydro->u(IM2,k,j,i) = 0.0;
         phydro->u(IM3,k,j,i) = 0.0;
