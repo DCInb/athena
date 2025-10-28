@@ -144,6 +144,17 @@ Hydro::Hydro(MeshBlock *pmb, ParameterInput *pin) :
     laplacian_r_fc_.NewAthenaArray(nc1);
   }
 
+  // MM:get input related to zone-averaging
+  n_avg_.NewAthenaArray(nc2);
+  do_average_ = pin->GetOrAddBoolean("hydro","polar_average",false);
+  if (do_average_== true and COORDINATE_SYSTEM != "spherical_polar"){
+    std::stringstream msg;
+    msg << "### FATAL ERROR in Hydro::Hydro" << std::endl
+        << "Zone averaging (polar_average=true) only works with spherical polar coordinates" << std::endl;
+    throw std::runtime_error(msg.str().c_str());
+    return;
+  }
+  
   UserTimeStep_ = pmb->pmy_mesh->UserTimeStep_;
 }
 

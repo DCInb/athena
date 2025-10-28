@@ -13,7 +13,7 @@
 #include <fstream>
 #include <iostream>
 #define NARRAY 2527   // length of profile
-#define NGRAVL 200
+#define NGRAVL 200 
 
 
 // Athena++ headers
@@ -47,7 +47,7 @@ Real rho[NARRAY], p[NARRAY], rad[NARRAY], menc_init[NARRAY];  // initial profile
 Real logr[NGRAVL],menc[NGRAVL]; // enclosed mass profile
 Real Ggrav, rstar_initial, mstar_initial, gamma_gas; // FOR RESCALING
 Real GM1, GM2; // two point masses
-Real rsoft2;
+Real rsoft2, ecc, sma;
 Real xi[3], vi[3], ai[3], agas1i[3], agas2i[3];
 Real separation_stop_min;
 int n_particle_substeps;
@@ -56,6 +56,7 @@ Real t_relax, tau_relax;
 int trackfile_number, update_grav_every;
 Real trackfile_dt, trackfile_next_time;
 Real d_insp, v_insp;
+bool is_onlystar;
 } // namespace
 
 void DiodeOuterX1(MeshBlock *pmb, Coordinates *pco, AthenaArray<Real> &prim,FaceField &b,
@@ -80,8 +81,8 @@ void Mesh::InitUserMeshData(ParameterInput *pin) {
   mstar_initial = pin->GetReal("problem","mstar_initial");
 
   rsoft2        = pin->GetReal("problem","rsoft2");
-  Real ecc      = pin->GetReal("problem","ecc");
-  Real sma      = pin->GetReal("problem","sma");
+  ecc           = pin->GetReal("problem","ecc");
+  sma           = pin->GetReal("problem","sma");
 
   separation_stop_min = pin->GetReal("problem","separation_stop_min");
   n_particle_substeps = pin->GetInteger("problem","n_particle_substeps");
@@ -93,6 +94,7 @@ void Mesh::InitUserMeshData(ParameterInput *pin) {
 
   d_insp        = pin->GetOrAddReal("problem","d_insp",1.0);
   v_insp        = pin->GetOrAddReal("problem","v_insp",0.0);
+  is_onlystar   = pin->GetOrAddBoolean("problem","is_onlystar", false);
 
   // input from hydro
   gamma_gas     = pin->GetReal("hydro","gamma");
@@ -120,7 +122,7 @@ void Mesh::InitUserMeshData(ParameterInput *pin) {
   // set the inner point mass based on excised mass
   Real menc_rin = Interpolate1DArray(rad, menc_init, rmin, NARRAY);
   GM1 = Ggrav*menc_rin;
-  Real GMenv = Ggrav*Interpolate1DArray(rad,menc_init,1.01*rstar_initial, NARRAY) - GM1;
+  Real GMenv = Ggrav*Interpolate1DArray(rad,menc_init,(1+1e-3)*rstar_initial, NARRAY) - GM1;
 
   // allocate the enclosed mass profile
   Real logr_min = log10(rmin);
@@ -131,15 +133,10 @@ void Mesh::InitUserMeshData(ParameterInput *pin) {
     menc[i] = Interpolate1DArray(rad,menc_init, pow(10,logr[i]), NGRAVL);
   }
 
-  // initialize the secondary
+  // initialize the secondary (the initilization of the velocity is moved to first rank)
   xi[0]=(1+ecc)*sma; //apocenter
   xi[1]=0;
   xi[2]=0;
-
-  Real vcirc = sqrt((GM1+GM2+GMenv)/sma);
-  vi[0] = 0.0;
-  vi[1] = sqrt(vcirc*vcirc*(1.0 - ecc)/(1.0 + ecc) ); //v_apocenter
-  vi[2] = 0.0;
 
   // always write at startup
   trackfile_next_time = time;
@@ -206,7 +203,7 @@ void MeshBlock::ProblemGenerator(ParameterInput *pin) {
 				                            + SQR(phydro->u(IM3,k,j,i)))/phydro->u(IDN,k,j,i);
 
         // set the scalar (conserved variables)
-	      if(r<rstar_initial){
+	      if(r<=rstar_initial){
 	        pscalars->s(0,k,j,i) = 1.0*phydro->u(IDN,k,j,i);
 	      }else{
 	        pscalars->s(0,k,j,i) = 1.e-30*phydro->u(IDN,k,j,i); // set small non-zero value
@@ -283,8 +280,22 @@ void MeshBlock::UserWorkInLoop() {
 void Mesh::UserWorkInLoop() {
   
   Mesh *pm = my_blocks(0)->pmy_mesh;
+  // sum the enclosed mass profile for monopole gravity
+  if (ncycle%update_grav_every == 0) {
+    SumMencProfile(pm,menc);
+    if (Globals::my_rank == 0 ){
+      std::cout << "enclosed mass updated... Menc(r=rstar_initial) = " << Interpolate1DArray(logr,menc,log10((1+1e-3)*rstar_initial), NGRAVL) <<"\n";
+    }
+  }
+  
   if ((ncycle==0)) {
     SumGasOnParticleAccels(pm, xi, agas1i, agas2i);
+
+    Real GMenv=Interpolate1DArray(logr,menc,log10((1+1e-3)*rstar_initial), NGRAVL)*Ggrav-GM1;
+    Real vcirc = sqrt((GM1+GM2+GMenv)/sma);
+    vi[0] = 0.0;
+    vi[1] = sqrt(vcirc*vcirc*(1.0 - ecc)/(1.0 + ecc) ); //v_apocenter
+    vi[2] = 0.0;
 
     // half step back
     ParticleAccels(xi,vi,ai);
@@ -309,14 +320,6 @@ void Mesh::UserWorkInLoop() {
   MPI_Bcast(xi,3,MPI_ATHENA_REAL,0,MPI_COMM_WORLD);
   MPI_Bcast(vi,3,MPI_ATHENA_REAL,0,MPI_COMM_WORLD);
 #endif
-
-  // sum the enclosed mass profile for monopole gravity
-  if (ncycle%update_grav_every == 0) {
-    SumMencProfile(pm,menc);
-    if (Globals::my_rank == 0 ){
-      std::cout << "enclosed mass updated... Menc(r=rstar_initial) = " << Interpolate1DArray(logr,menc,log10(1.01*rstar_initial), NGRAVL) <<"\n";
-    }
-  }
 
   if (time>t_relax) {
     SumGasOnParticleAccels(pm, xi, agas1i, agas2i);
@@ -438,7 +441,11 @@ void SumGasOnParticleAccels(Mesh *pm, Real (&xi)[3], Real (&ag1i)[3], Real (&ag2
 	        ag1i[0] += Ggrav*dm/d1c * x;
 	        ag1i[1] += Ggrav*dm/d1c * y;
 	        ag1i[2] += Ggrav*dm/d1c * z;
-	  
+
+          if (is_onlystar) {
+            dm *= pmb->pscalars->r(0,k,j,i);
+          }
+          
 	        ag2i[0] += Ggrav*dm * fspline(d2,rsoft2) * (x-xi[0]);
 	        ag2i[1] += Ggrav*dm * fspline(d2,rsoft2) * (y-xi[1]);
 	        ag2i[2] += Ggrav*dm * fspline(d2,rsoft2) * (z-xi[2]);
@@ -568,7 +575,7 @@ void WritePMTrackfile(Mesh *pm){
     fprintf(pfile,"%20.6e",pm->dt);
     fprintf(pfile,"%20.6e",GM1/Ggrav);
     fprintf(pfile,"%20.6e",GM2/Ggrav);
-    fprintf(pfile,"%20.6e",Interpolate1DArray(logr,menc,log10(1.01*rstar_initial), NGRAVL)-GM1/Ggrav);
+    fprintf(pfile,"%20.6e",Interpolate1DArray(logr,menc,log10((1+1e-3)*rstar_initial), NGRAVL)-GM1/Ggrav);
     fprintf(pfile,"%20.6e",xi[0]);
     fprintf(pfile,"%20.6e",xi[1]);
     fprintf(pfile,"%20.6e",xi[2]);

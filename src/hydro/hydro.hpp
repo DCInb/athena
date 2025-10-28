@@ -89,6 +89,10 @@ class Hydro {
   void CalculateVelocityDifferences(const int k, const int j, const int il, const int iu,
     const int ivx, AthenaArray<Real> &dvn, AthenaArray<Real> &dvt);
 
+  //MM:add a new function                                                                
+  void PhiAverageConserved(AthenaArray<Real> &u_in,AthenaArray<Real> &u_out);
+  void Get_block_N_zone_avg(MeshBlock *pmb);
+
  private:
   AthenaArray<Real> dt1_, dt2_, dt3_;  // scratch arrays used in NewTimeStep
   // scratch space used to compute fluxes
@@ -119,5 +123,9 @@ class Hydro {
 
   void AddDiffusionFluxes();
   Real GetWeightForCT(Real dflx, Real rhol, Real rhor, Real dx, Real dt);
+
+  // MM:zone-averaging                                                              
+  bool do_average_;
+  AthenaArray<int> n_avg_;
 };
 #endif // HYDRO_HYDRO_HPP_

@@ -7,18 +7,18 @@ problem_id = COLL       # problem ID: basename of output filenames
 <output1>
 file_type  = hdf5       # Binary data dump
 variable   = prim       # variables to be output
-dt         = 0.01        # time increment between outputs
+dt         = 0.05        # time increment between outputs
 xdmf=0
 
 <time>
 cfl_number = 0.3        # The Courant, Friedrichs, & Lewy (CFL) Number
 nlim       = -1         # cycle limit
-tlim       = 0.2        # time limit
+tlim       = 1.0        # time limit
 integrator  = vl2       # time integration algorithm
 xorder      = 2         # order of spatial reconstruction
 
 <mesh>
-nx1        = 1024         # Number of zones in X1-direction
+nx1        = 512         # Number of zones in X1-direction
 x1min      = -2.0       # minimum value of X1
 x1max      =  2.0       # maximum value of X1
 ix1_bc     = outflow    # inner-X1 boundary flag
@@ -49,7 +49,7 @@ gamma           = 1.6666666666666667   # gamma = C_p/C_v
 
 <problem>
 den0        = 1.0
-v0          = 100.0
+v0          = 20.0
 b0          = 0.1
 a0          = 0.02
 ky_over_2pi = 5
