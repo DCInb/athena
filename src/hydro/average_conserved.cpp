@@ -44,14 +44,13 @@ void Hydro::PhiAverageConserved(AthenaArray<Real> &u_in,AthenaArray<Real> &u_out
   int ie = pmb->ie; int je = pmb->je; int ke = pmb->ke;
   Real dphi = pmb->pcoord->dx3f(ks); // assume that cell size in phi is constant
 
-
   // average v as a vector
   // After average, each cell has the same v vector (but in general different IM1,2,3).
   for (int j=js; j<=je; ++j) {
     int n_avg_loops = pmb->block_size.nx3/n_avg_(j);
     Real sin_th = sin(pmb->pcoord->x2v(j));
     Real cos_th = cos(pmb->pcoord->x2v(j));
-    for (int l=1;l<=n_avg_loops;++l){
+    for (int l=1; l<=n_avg_loops; ++l){
       int ks_avg = ks + (l-1)*n_avg_(j);
       int ke_avg = ks_avg + n_avg_(j) -1;
       for (int i=is; i<=ie; ++i) {
@@ -111,9 +110,9 @@ void Hydro::Get_block_N_zone_avg(MeshBlock *pmb){
     for (int j=js; j<=je; ++j) {
       //int n_avg_temp = pmb->block_size.nx3/pow(2,(j-js));
       int n_avg_temp = round(pmb->block_size.nx3/pow(2,round(log2(j-js+1))));
-      if( n_avg_temp>1){     
+      if( n_avg_temp>1 ) {     
         n_avg_(j) = n_avg_temp;
-      }else{
+      } else {
         n_avg_(j) = 1;
       }
     }
@@ -123,15 +122,11 @@ void Hydro::Get_block_N_zone_avg(MeshBlock *pmb){
     for (int j=js; j<=je; ++j) {
       //int n_avg_temp = pmb->block_size.nx3/pow(2,(je-j));
       int n_avg_temp = round(pmb->block_size.nx3/pow(2,round(log2(je-j+1))));
-      if( n_avg_temp>1){     
+      if( n_avg_temp>1 ) {     
 	      n_avg_(j) = n_avg_temp;
-      }else{
+      } else {
 	      n_avg_(j) = 1;
       }
     }    
   }
-
-  
 }
-
-

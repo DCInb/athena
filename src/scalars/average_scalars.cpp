@@ -54,22 +54,21 @@ void PassiveScalars::PhiAverageScalars(AthenaArray<Real> &s_in,AthenaArray<Real>
     for (int j=js; j<=je; ++j) {
       int n_avg_loops = pmb->block_size.nx3/n_avg_(j);
       for (int l=1;l<=n_avg_loops;++l){
-	int ks_avg = ks + (l-1)*n_avg_(j);
-	int ke_avg = ks_avg + n_avg_(j) -1;
-	for (int i=is; i<=ie; ++i) {
-	  Real s_k_avg = 0.0;
-	  for (int k=ks_avg; k<=ke_avg; ++k) {
-	    s_k_avg +=  s_in(n,k,j,i);
-	  }
-	  // set the new value
-	  for (int k=ks_avg; k<=ke_avg; ++k) {
-	    s_out(n,k,j,i) = s_k_avg/n_avg_(j);
-	  }
-	}
+	      int ks_avg = ks + (l-1)*n_avg_(j);
+	      int ke_avg = ks_avg + n_avg_(j) -1;
+	      for (int i=is; i<=ie; ++i) {
+	        Real s_k_avg = 0.0;
+	        for (int k=ks_avg; k<=ke_avg; ++k) {
+	          s_k_avg +=  s_in(n,k,j,i);
+	        }
+	        // set the new value
+	        for (int k=ks_avg; k<=ke_avg; ++k) {
+	          s_out(n,k,j,i) = s_k_avg/n_avg_(j);
+	        }
+	      }
       }
     }
   }
-
   return;
 }
 
@@ -84,16 +83,15 @@ void PassiveScalars::Get_block_N_zone_avg_Scalars(MeshBlock *pmb){
     n_avg_(j) = 1;
   }
   
-  
   //check if we're on the inner x2-boundary
   if(pmb->pbval->block_bcs[BoundaryFace::inner_x2] == BoundaryFlag::polar) {
     for (int j=js; j<=je; ++j) {
       //int n_avg_temp = pmb->block_size.nx3/pow(2,(j-js));
       int n_avg_temp = round(pmb->block_size.nx3/pow(2,round(log2(j-js+1))));
-      if( n_avg_temp>1){     
-	n_avg_(j) = n_avg_temp;
-      }else{
-	n_avg_(j) = 1;
+      if( n_avg_temp>1 ) {     
+        n_avg_(j) = n_avg_temp;
+      } else {
+        n_avg_(j) = 1;
       }
     }
   }
@@ -102,15 +100,13 @@ void PassiveScalars::Get_block_N_zone_avg_Scalars(MeshBlock *pmb){
     for (int j=js; j<=je; ++j) {
       //int n_avg_temp = pmb->block_size.nx3/pow(2,(je-j));
       int n_avg_temp = round(pmb->block_size.nx3/pow(2,round(log2(je-j+1))));
-      if( n_avg_temp>1){     
-        n_avg_(j) = n_avg_temp;
-      }else{
-	n_avg_(j) = 1;
+      if( n_avg_temp>1 ) {     
+	      n_avg_(j) = n_avg_temp;
+      } else {
+	      n_avg_(j) = 1;
       }
     }    
   }
-
-  
 }
 
 
