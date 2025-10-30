@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <string>
 #include <vector>
+#include <sstream>    // sstream
 
 // Athena++ headers
 #include "../athena.hpp"
