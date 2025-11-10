@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PGEN="collision"
-DIR="collision_denturb_M30"
+DIR="TDSC/M20_B0.1_R1_D0.02"
 
 module purge
 source .bashrc_athena
@@ -16,8 +16,8 @@ fi
 
 mkdir -p "data/$DIR"
 cd data/$DIR
-cp ../../inputs/mhd/athinput.collision athinput.collision
-cp ../job_collision.slurm job.slurm
+cp ../../../inputs/mhd/athinput.collision athinput.collision
+cp ../../job_collision.slurm job.slurm
 
 # mpirun -np $SLURM_NPROCS ../../bin/athena -i athinput.collision
 sbatch job.slurm

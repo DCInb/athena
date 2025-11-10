@@ -18,19 +18,19 @@ integrator  = vl2       # time integration algorithm
 xorder      = 2         # order of spatial reconstruction
 
 <mesh>
-nx1        = 512         # Number of zones in X1-direction
+nx1        = 256        # Number of zones in X1-direction
 x1min      = -2.0       # minimum value of X1
 x1max      =  2.0       # maximum value of X1
 ix1_bc     = outflow    # inner-X1 boundary flag
 ox1_bc     = outflow    # outer-X1 boundary flag
 
-nx2        = 256         # Number of zones in X2-direction
+nx2        = 128        # Number of zones in X2-direction
 x2min      = -1.0       # minimum value of X2
 x2max      =  1.0       # maximum value of X2
 ix2_bc     = periodic   # inner-X2 boundary flag
 ox2_bc     = periodic   # outer-X2 boundary flag
 
-nx3        = 256         # Number of zones in X3-direction
+nx3        = 128        # Number of zones in X3-direction
 x3min      = -1.0       # minimum value of X3
 x3max      =  1.0       # maximum value of X3
 ix3_bc     = periodic   # inner-X3 boundary flag
@@ -51,8 +51,8 @@ gamma           = 1.6666666666666667   # gamma = C_p/C_v
 den0        = 1.0
 v0          = 20.0
 b0          = 0.1
-a0          = 0.02
-ky_over_2pi = 5
-kz_over_2pi = 5
+a0          = 0
+ky_over_2pi = 0
+kz_over_2pi = 0
 isDenTurb   = true
 denTurb     = 0.02
