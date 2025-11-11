@@ -60,6 +60,9 @@ void Mesh::InitUserMeshData(ParameterInput *pin) {
 
 	ky = ky_over_2pi * 2 * PI;
 	kz = kz_over_2pi * 2 * PI;
+
+  // Read the initial density distribution from hdf5 file
+  
 }
 
 //======================================================================================
@@ -68,6 +71,7 @@ void Mesh::InitUserMeshData(ParameterInput *pin) {
 //======================================================================================
 
 void MeshBlock::ProblemGenerator(ParameterInput *pin) {
+  // Reset the random number generator using the meshblock ID
 
   // SETUP THE INITIAL CONDITIONS ON MESH
   for (int k=ks; k<=ke; k++) {

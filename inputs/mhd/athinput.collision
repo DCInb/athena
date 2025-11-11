@@ -7,7 +7,7 @@ problem_id = COLL       # problem ID: basename of output filenames
 <output1>
 file_type  = hdf5       # Binary data dump
 variable   = prim       # variables to be output
-dt         = 0.05        # time increment between outputs
+dt         = 0.02        # time increment between outputs
 xdmf=0
 
 <time>

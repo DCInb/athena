@@ -41,7 +41,6 @@ meshtest.dat
 *.output
 *.dat
 data/
-vis/
 
 # Visualization package files
 .smhist
