@@ -28,6 +28,7 @@
 #include "../utils/utils.hpp"
 #include "../outputs/outputs.hpp"
 #include "../scalars/scalars.hpp"
+#include "../inputs/hdf5_reader.hpp"  // HDF5ReadRealArray()
 
 namespace {
 // declare the functions and variables that are used in the file 
