@@ -50,7 +50,7 @@ gamma           = 1.6666666666666667   # gamma = C_p/C_v
 <problem>
 den0        = 1.0
 v0          = 20.0
-b0          = 0.1
+b0          = 0.5
 a0          = 0
 ky_over_2pi = 0
 kz_over_2pi = 0

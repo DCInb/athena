@@ -74,7 +74,7 @@ void Mesh::InitUserMeshData(ParameterInput *pin) {
 void MeshBlock::ProblemGenerator(ParameterInput *pin) {
   // Reset the random number generator using the meshblock ID
   gen.seed(gid);
-
+  
   // SETUP THE INITIAL CONDITIONS ON MESH
   for (int k=ks; k<=ke; k++) {
     Real z = pcoord->x3v(k);

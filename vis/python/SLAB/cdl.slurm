@@ -2,8 +2,7 @@
 
 #SBATCH --job-name=lc
 #SBATCH --partition=64c512g
-#SBATCH -N 1
-#SBATCH --exclusive
+#SBATCH -n 1
 #SBATCH --output=%j.out
 #SBATCH --error=%j.err
 
