@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=lc
+#SBATCH --job-name=cdl
 #SBATCH --partition=64c512g
 #SBATCH -n 1
 #SBATCH --output=%j.out

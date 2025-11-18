@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PGEN="collision"
-DIR="TDSC/M20_B0.5_R2_D0.02_PR"
+DIR="TDSC/M20_B0.001_R2_D0.02_PR"
 DAT="$DIR/den_turb.hdf5"
 
 module purge
