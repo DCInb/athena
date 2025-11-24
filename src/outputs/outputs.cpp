@@ -344,8 +344,8 @@ Outputs::Outputs(Mesh *pm, ParameterInput *pin) {
           // Check if we want to include the mesh data in the output
           op.include_mesh_data = pin->GetOrAddBoolean(op.block_name, "mesh_data", true);
           if (op.data_format.empty()) {
-            std::cout << "No data_format specified in output block '"
-                      << op.block_name << "', using default" << std::endl;
+            // std::cout << "No data_format specified in output block '"
+            //           << op.block_name << "', using default" << std::endl;
             if (H5_DOUBLE_PRECISION_ENABLED) {
               pnew_type = new ATHDF5Output<double>(op);
             } else {

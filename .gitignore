@@ -40,6 +40,7 @@ meshtest.dat
 *.err
 *.output
 *.dat
+*.pdf
 data/
 
 # Visualization package files
