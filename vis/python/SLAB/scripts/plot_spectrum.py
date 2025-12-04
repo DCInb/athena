@@ -8,7 +8,7 @@ import Constants
 c=Constants.Constants()
 
 base_dir = '../../../../data/TDSC/'
-run_dir = 'M20_B0.5_R2_D0.02_PR/'
+run_dir = 'M20_Bpe_R2_D0.02_PR/'
 base_dir += run_dir
 
 import matplotlib as mpl
@@ -64,9 +64,9 @@ def hemholtz_decomposition(d):
     fft_vy = np.fft.fftshift(np.fft.fftn(d['vel2']))
     fft_vz = np.fft.fftshift(np.fft.fftn(d['vel3']))
 
-    fft_vx_c = (Kx_3d*fft_vx+Ky_3d*fft_vy+Kz_3d*fft_vz)*Kx/(k2_3d+1e-20)
-    fft_vy_c = (Kx_3d*fft_vx+Ky_3d*fft_vy+Kz_3d*fft_vz)*Ky/(k2_3d+1e-20)
-    fft_vz_c = (Kx_3d*fft_vx+Ky_3d*fft_vy+Kz_3d*fft_vz)*Kz/(k2_3d+1e-20)
+    fft_vx_c = (Kx_3d*fft_vx+Ky_3d*fft_vy+Kz_3d*fft_vz)*Kx_3d/(k2_3d+1e-20)
+    fft_vy_c = (Kx_3d*fft_vx+Ky_3d*fft_vy+Kz_3d*fft_vz)*Ky_3d/(k2_3d+1e-20)
+    fft_vz_c = (Kx_3d*fft_vx+Ky_3d*fft_vy+Kz_3d*fft_vz)*Kz_3d/(k2_3d+1e-20)
 
     fft_vx_s = fft_vx-fft_vx_c
     fft_vy_s = fft_vy-fft_vy_c
@@ -115,34 +115,35 @@ def plot_Bk_t(file):
     id_xl=226
     id_xr=286
 
-    vx_s,vy_s,vz_s, vx_c,vy_c,vz_c = hemholtz_decomposition(d)
+    # vx_s,vy_s,vz_s, vx_c,vy_c,vz_c = hemholtz_decomposition(d)
 
+    # fft_rho = np.fft.fftshift(np.fft.fftn(d['rho']))
 
-    fft_vx = np.fft.fftshift(np.fft.fftn(d['vel1'][:,:,id_xl:id_xr]*W)) #, axes=(0, 1)
-    fft_vy = np.fft.fftshift(np.fft.fftn(d['vel2'][:,:,id_xl:id_xr]*W))
-    fft_vz = np.fft.fftshift(np.fft.fftn(d['vel3'][:,:,id_xl:id_xr]*W))
+    # fft_vx = np.fft.fftshift(np.fft.fftn(d['vel1'][:,:,id_xl:id_xr]*W)) #, axes=(0, 1)
+    # fft_vy = np.fft.fftshift(np.fft.fftn(d['vel2'][:,:,id_xl:id_xr]*W))
+    # fft_vz = np.fft.fftshift(np.fft.fftn(d['vel3'][:,:,id_xl:id_xr]*W))
 
-    fft_vx_s = np.fft.fftshift(np.fft.fftn(vx_s[:,:,id_xl:id_xr]*W))
-    fft_vy_s = np.fft.fftshift(np.fft.fftn(vy_s[:,:,id_xl:id_xr]*W))
-    fft_vz_s = np.fft.fftshift(np.fft.fftn(vz_s[:,:,id_xl:id_xr]*W))
+    # fft_vx_s = np.fft.fftshift(np.fft.fftn(vx_s[:,:,id_xl:id_xr]*W))
+    # fft_vy_s = np.fft.fftshift(np.fft.fftn(vy_s[:,:,id_xl:id_xr]*W))
+    # fft_vz_s = np.fft.fftshift(np.fft.fftn(vz_s[:,:,id_xl:id_xr]*W))
 
-    fft_vx_c = np.fft.fftshift(np.fft.fftn(vx_c[:,:,id_xl:id_xr]*W))
-    fft_vy_c = np.fft.fftshift(np.fft.fftn(vx_c[:,:,id_xl:id_xr]*W))
-    fft_vz_c = np.fft.fftshift(np.fft.fftn(vx_c[:,:,id_xl:id_xr]*W))
+    # fft_vx_c = np.fft.fftshift(np.fft.fftn(vx_c[:,:,id_xl:id_xr]*W))
+    # fft_vy_c = np.fft.fftshift(np.fft.fftn(vx_c[:,:,id_xl:id_xr]*W))
+    # fft_vz_c = np.fft.fftshift(np.fft.fftn(vx_c[:,:,id_xl:id_xr]*W))
 
 
     fft_Bx = np.fft.fftshift(np.fft.fftn((d['Bcc1'][:,:,id_xl:id_xr])*W))
     fft_By = np.fft.fftshift(np.fft.fftn(d['Bcc2'][:,:,id_xl:id_xr]*W))
     fft_Bz = np.fft.fftshift(np.fft.fftn(d['Bcc3'][:,:,id_xl:id_xr]*W))
 
-    fft_vax = np.fft.fftshift(np.fft.fftn((d['Bcc1'][:,:,id_xl:id_xr])/d['rho'][:,:,id_xl:id_xr]))
-    fft_vay = np.fft.fftshift(np.fft.fftn(d['Bcc2'][:,:,id_xl:id_xr]/d['rho'][:,:,id_xl:id_xr]))
-    fft_vaz = np.fft.fftshift(np.fft.fftn(d['Bcc3'][:,:,id_xl:id_xr]/d['rho'][:,:,id_xl:id_xr]))
+    # fft_vax = np.fft.fftshift(np.fft.fftn((d['Bcc1'][:,:,id_xl:id_xr])/d['rho'][:,:,id_xl:id_xr]*W))
+    # fft_vay = np.fft.fftshift(np.fft.fftn(d['Bcc2'][:,:,id_xl:id_xr]/d['rho'][:,:,id_xl:id_xr]*W))
+    # fft_vaz = np.fft.fftshift(np.fft.fftn(d['Bcc3'][:,:,id_xl:id_xr]/d['rho'][:,:,id_xl:id_xr]*W))
 
     k = np.sqrt(Kx_3d**2 + Ky_3d**2 + Kz_3d**2)
-    power_spectrum = np.abs(fft_vx)**2+np.abs(fft_vy)**2+np.abs(fft_vz)**2
-    power_spectrum_vpa = np.abs(fft_vx_s)**2
-    power_spectrum_vpe = np.abs(fft_vy_s)**2+np.abs(fft_vz_s)**2
+    # power_spectrum = np.abs(fft_rho)
+    power_spectrum_vpa = np.abs(fft_Bx)**2
+    power_spectrum_vpe = np.abs(fft_By)**2+np.abs(fft_Bz)**2
 
     # Bin the k-values to compute the spectrum
     k_bins = np.linspace(np.min(k), (np.max(k)), num=500)  # Adjust bin size as needed
@@ -153,7 +154,7 @@ def plot_Bk_t(file):
     # Compute the energy in each bin
     for i in range(len(k_bins) - 1):
         bin_mask = (k >= k_bins[i]) & (k < k_bins[i + 1])
-        energy_spectrum[i] = np.sum(power_spectrum[bin_mask])
+        # energy_spectrum[i] = np.sum(power_spectrum[bin_mask])
         energy_spectrum_vpa[i] = np.sum(power_spectrum_vpa[bin_mask])
         energy_spectrum_vpe[i] = np.sum(power_spectrum_vpe[bin_mask])
 
@@ -193,21 +194,21 @@ myfile=base_dir + "COLL.out1."+"00050"+".athdf"
 plot_Bk_t(myfile)
 
 ax[0].set_xlabel(r'$|k|$')
-ax[0].set_ylabel(r'$\mathcal{E}_{v_s\perp}(k)$')
+ax[0].set_ylabel(r'$\mathcal{E}_{B\perp}(k)$')
 ax[0].set_xscale('log')
 ax[0].set_yscale('log')
-ax[0].set_ylim(10**6,10**9)
+ax[0].set_ylim(10**8,10**14)
 ax[0].grid(True)
 ax[0].legend()
 
 ax[1].set_xlabel(r'$|k|$')
-ax[1].set_ylabel(r'$\mathcal{E}_{v_s\parallel}(k)$')
+ax[1].set_ylabel(r'$\mathcal{E}_{B\parallel}(k)$')
 ax[1].set_xscale('log')
 ax[1].set_yscale('log')
-ax[1].set_ylim(10**7,10**10)
+ax[1].set_ylim(10**8,10**14)
 ax[1].grid(True)
 
 
 out_dir = '../figs/' + run_dir
 os.makedirs(out_dir, exist_ok=True)
-plt.savefig(out_dir + '/Ek_s_spectrum_t.pdf', format='pdf', bbox_inches='tight')
+plt.savefig(out_dir + '/EB_spectrum_t.pdf', format='pdf', bbox_inches='tight')

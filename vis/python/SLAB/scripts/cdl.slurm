@@ -11,4 +11,4 @@ ulimit -l unlimited
 
 module load miniconda3
 source activate athena
-python plot_spectrum.py 
+python generate_cdl.py 

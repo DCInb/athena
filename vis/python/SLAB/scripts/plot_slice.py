@@ -8,7 +8,7 @@ import Constants
 c=Constants.Constants()
 
 base_dir = '../../../../data/TDSC/'
-run_dir = 'M20_B0.5_R2_D0.02_PR/'
+run_dir = 'M20_Bpe_R2_D0.02_PR/'
 base_dir += run_dir
 
 import matplotlib as mpl
@@ -49,8 +49,8 @@ fig = plt.figure(figsize=(8,6))
 ax = fig.add_subplot(111)
 contour = ax.pcolormesh(X, Y, (np.log10(2*d['rho']/(d['Bcc1']**2+d['Bcc2']**2+d['Bcc3']**2))[32,:,:]).T,cmap='plasma',shading='auto')
 cb1=plt.colorbar(contour,extend='both',label=r'$\log_{10}\left( \beta \right)$ ')
-ax.axvline(x=d['x1f'][226], color='k', ls='--')
-ax.axvline(x=d['x1f'][286], color='k', ls='--')
+# ax.axvline(x=d['x1f'][226], color='k', ls='--')
+# ax.axvline(x=d['x1f'][286], color='k', ls='--')
 ax.set_xlabel("x")
 ax.set_ylabel("y")
 
