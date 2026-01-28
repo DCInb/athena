@@ -41,6 +41,7 @@ meshtest.dat
 *.output
 *.dat
 *.pdf
+*.png
 data/
 
 # Visualization package files
