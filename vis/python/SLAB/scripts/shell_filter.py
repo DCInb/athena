@@ -104,7 +104,7 @@ def tau_uua(vK, vQ, d, dx):
         # Compute gradients of vQ
         dvQ_dz, dvQ_dy, dvQ_dx = np.gradient(vQ[i], dx, dx, dx)
         tau += - vK[i] * (d['vel1'] * dvQ_dx + d['vel2'] * dvQ_dy + d['vel3'] * dvQ_dz)
-    return tau
+    return np.sum(tau)
 
 def tau_uuc(vK, vQ, d, dx):
     """
@@ -120,7 +120,7 @@ def tau_uuc(vK, vQ, d, dx):
     tau = np.zeros_like(d['rho'])
     for i in range(3):
         tau += - vK[i] * vQ[i] * div_v
-    return tau
+    return np.sum(tau)
 
 def tau_bba(bK, bQ, d, dx):
     """
@@ -132,7 +132,7 @@ def tau_bba(bK, bQ, d, dx):
         # Compute gradients of bQ
         dbQ_dz, dbQ_dy, dbQ_dx = np.gradient(bQ[i], dx, dx, dx)
         tau += - bK[i] * (d['vel1'] * dbQ_dx + d['vel2'] * dbQ_dy + d['vel3'] * dbQ_dz)
-    return tau
+    return np.sum(tau)
 
 def tau_bbc(bK, bQ, d, dx):
     """
@@ -148,7 +148,7 @@ def tau_bbc(bK, bQ, d, dx):
     tau = np.zeros_like(d['rho'])
     for i in range(3):
         tau += - bK[i] * bQ[i] * div_v
-    return tau
+    return np.sum(tau)
 
 def tau_bup(uK, bQ, d, dx):
     """
@@ -161,7 +161,7 @@ def tau_bup(uK, bQ, d, dx):
 
     # Compute the energy transfer rate
     tau = - (uK[0] * dbb_dx + uK[1] * dbb_dy + uK[2] * dbb_dz)/np.sqrt(d['rho'])
-    return tau
+    return np.sum(tau)
 
 def tau_but(uK, bQ, d, dx):
     """
@@ -173,7 +173,7 @@ def tau_but(uK, bQ, d, dx):
         # Compute gradients of bQ
         dbQ_dz, dbQ_dy, dbQ_dx = np.gradient(bQ[i], dx, dx, dx)
         tau += uK[i] * (d['Bcc1']/np.sqrt(d['rho']) * dbQ_dx + d['Bcc2']/np.sqrt(d['rho']) * dbQ_dy + d['Bcc3']/np.sqrt(d['rho']) * dbQ_dz)
-    return tau
+    return np.sum(tau)
 
 def tau_ubp(bK, uQ, d, dx):
     """
@@ -185,7 +185,7 @@ def tau_ubp(bK, uQ, d, dx):
 
     # Compute the energy transfer rate
     tau = - (bK[0] * d['Bcc1'] + bK[1] * d['Bcc2'] + bK[2] * d['Bcc3']) * div_uQ / 2
-    return tau
+    return np.sum(tau)
 
 def tau_ubt(bK, uQ, d, dx):
     """
@@ -200,7 +200,7 @@ def tau_ubt(bK, uQ, d, dx):
         duQ_dz = np.gradient(uQ[i] * d['Bcc3']/np.sqrt(d['rho']), dx, axis=0)
         div_uQ = duQ_dx + duQ_dy + duQ_dz
         tau += bK[i] * div_uQ
-    return tau
+    return np.sum(tau)
 
 def tau_pu(uK, pQ, d, dx):
     """
@@ -212,7 +212,7 @@ def tau_pu(uK, pQ, d, dx):
 
     # Compute the energy transfer rate
     tau = - (uK[0] * dpQ_dx + uK[1] * dpQ_dy + uK[2] * dpQ_dz)/np.sqrt(d['rho'])
-    return tau
+    return np.sum(tau)
 
 def cross_scale(k_mid, d, dx, fft_vx, fft_vy, fft_vz, fft_bx, fft_by, fft_bz, fft_p, Kmag):
     """
@@ -248,15 +248,18 @@ def cross_scale(k_mid, d, dx, fft_vx, fft_vy, fft_vz, fft_bx, fft_by, fft_bz, ff
 
     return (tau_tot, tau_UUA, tau_UUC, tau_BUT, tau_BUP, tau_UBT, tau_UBP, tau_BBA, tau_BBC, tau_PU)
 
-def plot_cro(myfile):
+def plot_cro(myfile, n_plot=10):
     """
     Plot cross-scale energy transfer rates.
     """
     # Initialize data
     d, (fft_vx, fft_vy, fft_vz), (fft_bx, fft_by, fft_bz), fft_p, Kmag, dx = init_data(myfile)
-    k_mids = np.logspace(0, np.log10(np.max(Kmag)), num=10)
-    for k_mid in k_mids:
-        tau = cross_scale(k_mid, d, dx, fft_vx, fft_vy, fft_vz, fft_bx, fft_by, fft_bz, fft_p, Kmag)
+    k_mids = np.logspace(0, np.log10(np.max(Kmag)), num=n_plot)
+    taus =  [[] for _ in range(10)]
+    for i in range(n_plot):
+        tau = cross_scale(k_mids[i], d, dx, fft_vx, fft_vy, fft_vz, fft_bx, fft_by, fft_bz, fft_p, Kmag)
+        for j in range(10):
+            taus[j].append(tau[j])
 
     # Plot the results
     names = [
