@@ -94,7 +94,7 @@ def band_pass(d_fft, kl, kr, Kmag):
     d_filtered = np.fft.ifftn(np.fft.ifftshift(d_fft_filtered))
     return d_filtered.real
 
-def tau_uua(vK, vQ, d, dx):
+def tau_uua(vK, vQ, d, dx, dv):
     """
     Compute the energy transfer rate through advection from velocity field vQ to velocity field vK.
     """
@@ -104,9 +104,9 @@ def tau_uua(vK, vQ, d, dx):
         # Compute gradients of vQ
         dvQ_dz, dvQ_dy, dvQ_dx = np.gradient(vQ[i], dx, dx, dx)
         tau += - vK[i] * (d['vel1'] * dvQ_dx + d['vel2'] * dvQ_dy + d['vel3'] * dvQ_dz)
-    return np.sum(tau)
+    return np.sum(tau)*dv
 
-def tau_uuc(vK, vQ, d, dx):
+def tau_uuc(vK, vQ, d, dx, dv):
     """
     Compute the energy transfer rate through compression from velocity field vK to velocity field vQ.
     """
@@ -120,9 +120,9 @@ def tau_uuc(vK, vQ, d, dx):
     tau = np.zeros_like(d['rho'])
     for i in range(3):
         tau += - vK[i] * vQ[i] * div_v
-    return np.sum(tau)
+    return np.sum(tau)*dv
 
-def tau_bba(bK, bQ, d, dx):
+def tau_bba(bK, bQ, d, dx, dv):
     """
     Compute the energy transfer rate through advection from magnetic field bQ to magnetic field bK.
     """
@@ -132,9 +132,9 @@ def tau_bba(bK, bQ, d, dx):
         # Compute gradients of bQ
         dbQ_dz, dbQ_dy, dbQ_dx = np.gradient(bQ[i], dx, dx, dx)
         tau += - bK[i] * (d['vel1'] * dbQ_dx + d['vel2'] * dbQ_dy + d['vel3'] * dbQ_dz)
-    return np.sum(tau)
+    return np.sum(tau)*dv
 
-def tau_bbc(bK, bQ, d, dx):
+def tau_bbc(bK, bQ, d, dx, dv):
     """
     Compute the energy transfer rate through compression from magnetic field bK to magnetic field bQ.
     """
@@ -148,9 +148,9 @@ def tau_bbc(bK, bQ, d, dx):
     tau = np.zeros_like(d['rho'])
     for i in range(3):
         tau += - bK[i] * bQ[i] * div_v
-    return np.sum(tau)
+    return np.sum(tau)*dv
 
-def tau_bup(uK, bQ, d, dx):
+def tau_bup(uK, bQ, d, dx, dv):
     """
     Compute the energy transfer rate through magnetic pressure from magnetic field bQ to velocity field uK.
     """
@@ -161,9 +161,9 @@ def tau_bup(uK, bQ, d, dx):
 
     # Compute the energy transfer rate
     tau = - (uK[0] * dbb_dx + uK[1] * dbb_dy + uK[2] * dbb_dz)/np.sqrt(d['rho'])
-    return np.sum(tau)
+    return np.sum(tau)*dv
 
-def tau_but(uK, bQ, d, dx):
+def tau_but(uK, bQ, d, dx, dv):
     """
     Compute the energy transfer rate through magnetic tension from magnetic field bQ to velocity field uK.
     """
@@ -173,9 +173,9 @@ def tau_but(uK, bQ, d, dx):
         # Compute gradients of bQ
         dbQ_dz, dbQ_dy, dbQ_dx = np.gradient(bQ[i], dx, dx, dx)
         tau += uK[i] * (d['Bcc1']/np.sqrt(d['rho']) * dbQ_dx + d['Bcc2']/np.sqrt(d['rho']) * dbQ_dy + d['Bcc3']/np.sqrt(d['rho']) * dbQ_dz)
-    return np.sum(tau)
+    return np.sum(tau)*dv
 
-def tau_ubp(bK, uQ, d, dx):
+def tau_ubp(bK, uQ, d, dx, dv):
     """
     Compute the energy transfer rate through magnetic pressure from velocity field uQ to magnetic field bK.
     """
@@ -185,9 +185,9 @@ def tau_ubp(bK, uQ, d, dx):
 
     # Compute the energy transfer rate
     tau = - (bK[0] * d['Bcc1'] + bK[1] * d['Bcc2'] + bK[2] * d['Bcc3']) * div_uQ / 2
-    return np.sum(tau)
+    return np.sum(tau)*dv
 
-def tau_ubt(bK, uQ, d, dx):
+def tau_ubt(bK, uQ, d, dx, dv):
     """
     Compute the energy transfer rate through magnetic tension from magnetic field bK to velocity field uQ.
     """
@@ -200,9 +200,9 @@ def tau_ubt(bK, uQ, d, dx):
         duQ_dz = np.gradient(uQ[i] * d['Bcc3']/np.sqrt(d['rho']), dx, axis=0)
         div_uQ = duQ_dx + duQ_dy + duQ_dz
         tau += bK[i] * div_uQ
-    return np.sum(tau)
+    return np.sum(tau)*dv
 
-def tau_pu(uK, pQ, d, dx):
+def tau_pu(uK, pQ, d, dx, dv):
     """
     Compute the energy transfer rate through pressure from pressure field pQ to velocity field uK.
     Becareful pQ is a scalar field.
@@ -212,9 +212,9 @@ def tau_pu(uK, pQ, d, dx):
 
     # Compute the energy transfer rate
     tau = - (uK[0] * dpQ_dx + uK[1] * dpQ_dy + uK[2] * dpQ_dz)/np.sqrt(d['rho'])
-    return np.sum(tau)
+    return np.sum(tau)*dv
 
-def cross_scale(k_mid, d, dx, fft_vx, fft_vy, fft_vz, fft_bx, fft_by, fft_bz, fft_p, Kmag):
+def cross_scale(k_mid, d, dx, dv, fft_vx, fft_vy, fft_vz, fft_bx, fft_by, fft_bz, fft_p, Kmag):
     """
     Compute cross-scale energy transfer rates at a given mid wavenumber k_mid.
     """
@@ -234,15 +234,15 @@ def cross_scale(k_mid, d, dx, fft_vx, fft_vy, fft_vz, fft_bx, fft_by, fft_bz, ff
     pQ = band_pass(fft_p, 0, k_mid, Kmag)
 
     # Compute energy transfer rates
-    tau_UUA = tau_uua(vK, vQ, d, dx)
-    tau_UUC = tau_uuc(vK, vQ, d, dx)
-    tau_BBA = tau_bba(bK, bQ, d, dx)
-    tau_BBC = tau_bbc(bK, bQ, d, dx)
-    tau_BUP = tau_bup(vK, bQ, d, dx)
-    tau_BUT = tau_but(vK, bQ, d, dx)
-    tau_UBP = tau_ubp(bK, vQ, d, dx)
-    tau_UBT = tau_ubt(bK, vQ, d, dx)
-    tau_PU  = tau_pu(vK, pQ, d, dx)
+    tau_UUA = tau_uua(vK, vQ, d, dx, dv)
+    tau_UUC = tau_uuc(vK, vQ, d, dx, dv)
+    tau_BBA = tau_bba(bK, bQ, d, dx, dv)
+    tau_BBC = tau_bbc(bK, bQ, d, dx, dv)
+    tau_BUP = tau_bup(vK, bQ, d, dx, dv)
+    tau_BUT = tau_but(vK, bQ, d, dx, dv)
+    tau_UBP = tau_ubp(bK, vQ, d, dx, dv)
+    tau_UBT = tau_ubt(bK, vQ, d, dx, dv)
+    tau_PU  = tau_pu(vK, pQ, d, dx, dv)
 
     tau_tot = (tau_UUA + tau_UUC + tau_BBA + tau_BBC + tau_BUP + tau_BUT + tau_UBP + tau_UBT + tau_PU)
 
@@ -254,10 +254,11 @@ def plot_cro(myfile, n_plot=10):
     """
     # Initialize data
     d, (fft_vx, fft_vy, fft_vz), (fft_bx, fft_by, fft_bz), fft_p, Kmag, dx = init_data(myfile)
+    dv = (dx)**3
     k_mids = np.logspace(0, np.log10(np.max(Kmag)), num=n_plot)
     taus =  [[] for _ in range(10)]
     for i in range(n_plot):
-        tau = cross_scale(k_mids[i], d, dx, fft_vx, fft_vy, fft_vz, fft_bx, fft_by, fft_bz, fft_p, Kmag)
+        tau = cross_scale(k_mids[i], d, dx, dv, fft_vx, fft_vy, fft_vz, fft_bx, fft_by, fft_bz, fft_p, Kmag)
         for j in range(10):
             taus[j].append(tau[j])
     # Convert to numpy arrays
@@ -299,7 +300,15 @@ def plot_cro(myfile, n_plot=10):
     axes[0].plot(k_mids, taus[9], color=colors[9], label=r'$\mathcal{T}_{\mathrm{PU}}$')
 
     axes[0].set_xscale('log')
-    axes[0].legend()
+        # Place a centered legend above the whole figure
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(
+        handles, labels,
+        ncol=2,
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.02),
+        frameon=True
+    )
     
     # Fig.1, PU
     axes[1].plot(k_mids, taus[9], color=colors[9], label=r'$\mathcal{T}_{\mathrm{PU}}$')
@@ -348,8 +357,147 @@ def plot_cro(myfile, n_plot=10):
     n = str(int(num))
     plt.savefig(out_dir + '/cro_t' + n + '.pdf', format='pdf', bbox_inches='tight')
 
+def shell_to_shell(vK, vQ, bK, bQ, pQ, d, dx, dv):
+    """
+    Calculate shell-to-shell energy transfer rates.
+    """
+    # Compute energy transfer rates
+    tau_UUA = tau_uua(vK, vQ, d, dx, dv)
+    tau_UUC = tau_uuc(vK, vQ, d, dx, dv)
+    tau_BBA = tau_bba(bK, bQ, d, dx, dv)
+    tau_BBC = tau_bbc(bK, bQ, d, dx, dv)
+    tau_BUP = tau_bup(vK, bQ, d, dx, dv)
+    tau_BUT = tau_but(vK, bQ, d, dx, dv)
+    tau_UBP = tau_ubp(bK, vQ, d, dx, dv)
+    tau_UBT = tau_ubt(bK, vQ, d, dx, dv)
+    tau_PU  = tau_pu(vK, pQ, d, dx, dv)
+
+    tau_tot = (tau_UUA + tau_UUC + tau_BBA + tau_BBC + tau_BUP + tau_BUT + tau_UBP + tau_UBT + tau_PU)
+
+    return (tau_tot, tau_UUA, tau_UUC, tau_BUT, tau_BUP, tau_UBT, tau_UBP, tau_BBA, tau_BBC, tau_PU)
+
+def plot_panel(ax, T, title, eps):
+
+    im = ax.pcolormesh(
+        q_vals,
+        k_vals,
+        T / eps,          # 🔑 normalization
+        shading="nearest",
+        cmap=cmap,
+        norm=norm
+    )
+
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+
+    # diagonal K = Q
+    qq = np.logspace(np.log10(q_vals.min()),
+                     np.log10(q_vals.max()), 300)
+    ax.plot(qq, qq, "k-", lw=1)
+
+    # panel label
+    ax.text(
+        0.05, 0.83, title,
+        transform=ax.transAxes,
+        fontsize=16,
+        bbox=dict(boxstyle="round", fc="white", ec="black")
+    )
+
+    # epsilon annotation
+    ax.text(
+        0.60, 0.05, rf"$\varepsilon = {eps:.3g}\,\varepsilon_0$",
+        transform=ax.transAxes,
+        fontsize=12
+    )
+
+    return im
+
+
+def plot_s2s(myfile, n_shells=10):
+    """
+    Plot shell-to-shell energy transfer rates.
+    """
+    # Initialize data
+    d, (fft_vx, fft_vy, fft_vz), (fft_bx, fft_by, fft_bz), fft_p, Kmag, dx = init_data(myfile)
+    dv = (dx)**3
+    k_edges = np.logspace(0, np.log10(np.max(Kmag)), num=n_shells+1)
+    s2s_matrix = np.zeros((10, n_shells, n_shells))
+    for i in range(n_shells):
+        # Apply band-pass filters
+        vK = [band_pass(fft_vx, k_edges[i], k_edges[i+1], Kmag),
+              band_pass(fft_vy, k_edges[i], k_edges[i+1], Kmag),
+              band_pass(fft_vz, k_edges[i], k_edges[i+1], Kmag)]
+        bK = [band_pass(fft_bx, k_edges[i], k_edges[i+1], Kmag),
+              band_pass(fft_by, k_edges[i], k_edges[i+1], Kmag),
+              band_pass(fft_bz, k_edges[i], k_edges[i+1], Kmag)]
+        for j in range(n_shells):
+            # Apply band-pass filters
+            vQ = [band_pass(fft_vx, k_edges[j], k_edges[j+1], Kmag),
+                  band_pass(fft_vy, k_edges[j], k_edges[j+1], Kmag),
+                  band_pass(fft_vz, k_edges[j], k_edges[j+1], Kmag)]
+            bQ = [band_pass(fft_bx, k_edges[j], k_edges[j+1], Kmag),
+                  band_pass(fft_by, k_edges[j], k_edges[j+1], Kmag),
+                  band_pass(fft_bz, k_edges[j], k_edges[j+1], Kmag)]
+            pQ = band_pass(fft_p, k_edges[j], k_edges[j+1], Kmag)
+
+            tau = shell_to_shell(vK, vQ, bK, bQ, pQ, d, dx, dv)
+            for m in range(10):
+                s2s_matrix[m, i, j] = tau[m]
+    
+    # construct data for plotting
+    names = [
+        r'$\mathcal{T}_{\mathrm{tot}}$',
+        r'$\mathcal{T}_{\mathrm{UUa}}$',
+        r'$\mathcal{T}_{\mathrm{UUc}}$',
+        r'$\mathcal{T}_{\mathrm{BUT}}$',
+        r'$\mathcal{T}_{\mathrm{BUP}}$',
+        r'$\mathcal{T}_{\mathrm{UBT}}$',
+        r'$\mathcal{T}_{\mathrm{UBP}}$',
+        r'$\mathcal{T}_{\mathrm{BBa}}$',
+        r'$\mathcal{T}_{\mathrm{BBc}}$',
+        r'$\mathcal{T}_{\mathrm{PU}}$'
+    ] 
+    eps = [np.max(np.abs(T)) for T in s2s_matrix]
+
+    # Create subplots
+    fig, axes = plt.subplots(10, figsize=(4, 30), sharex=True, constrained_layout=True)
+    axes = axes.ravel()
+
+    norm = Normalize(vmin=-1.0, vmax=1.0)
+    cmap = "PuOr_r"
+
+    for ax, T, title, ep in zip(axes, s2s_matrix, names, eps):
+        im = plot_panel(ax, T, title, ep)
+        ax.set_ylabel(r'$k_{\mathrm{K}}L_y/2\pi$')
+    
+    axes[-1].set_xlabel(r'$k_{\mathrm{Q}}L_y/2\pi$')
+
+    cbar = fig.colorbar(
+        im,
+        ax=axes,
+        orientation="horizontal",
+        location="top",
+        pad=0.02,
+        aspect=40
+    )
+
+    cbar.set_label(
+        r"shell-to-shell transfer $\mathcal{T}(Q, K)$  $[\varepsilon]$",
+        fontsize=14
+    )
+
+    cbar.set_ticks(np.linspace(-1, 1, 9))
+
+    # Save the figure
+    out_dir = '../figs/' + run_dir
+    os.makedirs(out_dir, exist_ok=True)
+    num = myfile.split('.')[-2]   # '00030'
+    n = str(int(num))
+    plt.savefig(out_dir + '/s2s_t' + n + '.pdf', format='pdf', bbox_inches='tight')
+
 base_dir = '../../../../data/TDSC/'
 run_dir = 'M10_B0.1_R2_D0.02_PR/'
 base_dir += run_dir
 myfile=base_dir + "COLL.out1."+"00010"+".athdf"
-plot_cro(myfile)
+# plot_s2s(myfile)
+plot_cro(myfile, n_plot=10)

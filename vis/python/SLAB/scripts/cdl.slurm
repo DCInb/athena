@@ -2,7 +2,7 @@
 
 #SBATCH --job-name=cdl
 #SBATCH --partition=64c512g
-#SBATCH -n 8
+#SBATCH -n 2
 #SBATCH --output=%j.out
 #SBATCH --error=%j.err
 
