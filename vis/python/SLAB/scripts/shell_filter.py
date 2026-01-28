@@ -260,7 +260,9 @@ def plot_cro(myfile, n_plot=10):
         tau = cross_scale(k_mids[i], d, dx, fft_vx, fft_vy, fft_vz, fft_bx, fft_by, fft_bz, fft_p, Kmag)
         for j in range(10):
             taus[j].append(tau[j])
-
+    # Convert to numpy arrays
+    taus = np.array(taus)
+    
     # Plot the results
     names = [
         r'$\mathcal{T}_{\mathrm{tot}}$',
@@ -285,58 +287,58 @@ def plot_cro(myfile, n_plot=10):
     ]
 
     # Create subplots
-    fig, axes = plt.subplots(3, 2, figsize=(6, 9))
+    fig, axes = plt.subplots(3, 2, figsize=(6, 4))
     axes = axes.ravel()
 
     # Fig.0, total
-    axes[0].plot(k_mids, tau[0], color=colors[0], label=names[0])
-    axes[0].plot(k_mids, tau[1]+tau[2], '--', color=colors[1], label=r'$\mathcal{T}_{\mathrm{UU}}$')
-    axes[0].plot(k_mids, tau[3]+tau[4], '--', color=colors[3], label=r'$\mathcal{T}_{\mathrm{BU}}$')
-    axes[0].plot(k_mids, tau[5]+tau[6], '--', color=colors[5], label=r'$\mathcal{T}_{\mathrm{UB}}$')
-    axes[0].plot(k_mids, tau[7]+tau[8], '--', color=colors[7], label=r'$\mathcal{T}_{\mathrm{BB}}$')
-    axes[0].plot(k_mids, tau[9], color=colors[9], label=r'$\mathcal{T}_{\mathrm{PU}}$')
+    axes[0].plot(k_mids, taus[0], color=colors[0], label=names[0])
+    axes[0].plot(k_mids, taus[1]+taus[2], '--', color=colors[1], label=r'$\mathcal{T}_{\mathrm{UU}}$')
+    axes[0].plot(k_mids, taus[3]+taus[4], '--', color=colors[3], label=r'$\mathcal{T}_{\mathrm{BU}}$')
+    axes[0].plot(k_mids, taus[5]+taus[6], '--', color=colors[5], label=r'$\mathcal{T}_{\mathrm{UB}}$')
+    axes[0].plot(k_mids, taus[7]+taus[8], '--', color=colors[7], label=r'$\mathcal{T}_{\mathrm{BB}}$')
+    axes[0].plot(k_mids, taus[9], color=colors[9], label=r'$\mathcal{T}_{\mathrm{PU}}$')
 
     axes[0].set_xscale('log')
     axes[0].legend()
     
     # Fig.1, PU
-    axes[1].plot(k_mids, tau[9], color=colors[9], label=r'$\mathcal{T}_{\mathrm{PU}}$')
+    axes[1].plot(k_mids, taus[9], color=colors[9], label=r'$\mathcal{T}_{\mathrm{PU}}$')
     axes[1].set_xscale('log')
 
     # Fig.2, UU
-    axes[2].plot(k_mids, tau[1], color=colors[1], label=names[1])
-    axes[2].plot(k_mids, tau[2], color=colors[2], label=names[2])
-    axes[2].plot(k_mids, tau[1]+tau[2], '--', color=colors[1])
+    axes[2].plot(k_mids, taus[1], color=colors[1], label=names[1])
+    axes[2].plot(k_mids, taus[2], color=colors[2], label=names[2])
+    axes[2].plot(k_mids, taus[1]+taus[2], '--', color=colors[1])
     axes[2].set_xscale('log')
     axes[2].legend()
 
     # Fig.3, BB
-    axes[3].plot(k_mids, tau[7], color=colors[7], label=names[7])
-    axes[3].plot(k_mids, tau[8], color=colors[8], label=names[8])
-    axes[3].plot(k_mids, tau[7]+tau[8], '--', color=colors[7])
+    axes[3].plot(k_mids, taus[7], color=colors[7], label=names[7])
+    axes[3].plot(k_mids, taus[8], color=colors[8], label=names[8])
+    axes[3].plot(k_mids, taus[7]+taus[8], '--', color=colors[7])
     axes[3].set_xscale('log')
     axes[3].legend()
 
     # Fig.4, BU
-    axes[4].plot(k_mids, tau[3], color=colors[3], label=names[3])
-    axes[4].plot(k_mids, tau[4], color=colors[4], label=names[4])
-    axes[4].plot(k_mids, tau[3]+tau[4], '--', color=colors[3])
+    axes[4].plot(k_mids, taus[3], color=colors[3], label=names[3])
+    axes[4].plot(k_mids, taus[4], color=colors[4], label=names[4])
+    axes[4].plot(k_mids, taus[3]+taus[4], '--', color=colors[3])
     axes[4].set_xscale('log')
     axes[4].legend()
 
     # Fig.5, UB
-    axes[5].plot(k_mids, tau[5], color=colors[5], label=names[5])
-    axes[5].plot(k_mids, tau[6], color=colors[6], label=names[6])
-    axes[5].plot(k_mids, tau[5]+tau[6], '--', color=colors[5])
+    axes[5].plot(k_mids, taus[5], color=colors[5], label=names[5])
+    axes[5].plot(k_mids, taus[6], color=colors[6], label=names[6])
+    axes[5].plot(k_mids, taus[5]+taus[6], '--', color=colors[5])
     axes[5].set_xscale('log')
     axes[5].legend()
 
     # Add labels
     axes[4].set_xlabel(r'$k_{\mathrm{mid}}L_y/2\pi$')
     axes[5].set_xlabel(r'$k_{\mathrm{mid}}L_y/2\pi$')
-    axes[0].set_ylabel(r'$\mathcal{T}_{\mathrm{XY}^{k_\mathrm{mid}$')
-    axes[2].set_ylabel(r'$\mathcal{T}_{\mathrm{XY}^{k_\mathrm{mid}$')
-    axes[4].set_ylabel(r'$\mathcal{T}_{\mathrm{XY}^{k_\mathrm{mid}$')
+    axes[0].set_ylabel(r'$\mathcal{T}_{\mathrm{XY}}^{k_\mathrm{mid}}$')
+    axes[2].set_ylabel(r'$\mathcal{T}_{\mathrm{XY}}^{k_\mathrm{mid}}$')
+    axes[4].set_ylabel(r'$\mathcal{T}_{\mathrm{XY}}^{k_\mathrm{mid}}$')
     plt.tight_layout()
 
     # Save the figure
@@ -344,7 +346,7 @@ def plot_cro(myfile, n_plot=10):
     os.makedirs(out_dir, exist_ok=True)
     num = myfile.split('.')[-2]   # '00030'
     n = str(int(num))
-    plt.savefig(out_dir + '/cro_t' + num + '.pdf', format='pdf', bbox_inches='tight')
+    plt.savefig(out_dir + '/cro_t' + n + '.pdf', format='pdf', bbox_inches='tight')
 
 base_dir = '../../../../data/TDSC/'
 run_dir = 'M10_B0.1_R2_D0.02_PR/'
