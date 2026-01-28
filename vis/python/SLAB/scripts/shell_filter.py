@@ -74,7 +74,8 @@ def init_data(myfile):
     fft_by = np.fft.fftshift(np.fft.fftn(d['Bcc2']*W))
     fft_bz = np.fft.fftshift(np.fft.fftn(d['Bcc3']*W))
 
-    fft_p = np.fft.fftshift(np.fft.fftn(d['press']*W))
+    cs = 1
+    fft_p = np.fft.fftshift(np.fft.fftn(d['rho']*cs**2*W))
 
     return d, (fft_vx, fft_vy, fft_vz), (fft_bx, fft_by, fft_bz), fft_p, Kmag, 2/N
 
