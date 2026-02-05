@@ -498,6 +498,6 @@ def plot_s2s(myfile, n_shells=10):
 base_dir = '../../../../data/TDSC/'
 run_dir = 'M10_B0.1_R2_D0.02_PR/'
 base_dir += run_dir
-myfile=base_dir + "COLL.out1."+"00010"+".athdf"
+myfile=base_dir + "COLL.out1."+"00025"+".athdf"
 # plot_s2s(myfile)
 plot_cro(myfile, n_plot=10)
