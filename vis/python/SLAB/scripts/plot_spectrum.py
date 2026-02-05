@@ -56,10 +56,16 @@ def get_fft_var(d, var_name, id_xl, id_xr):
 
     return fft_var
 
+def plot_powerlaw(ks, power):
+    # Plot a reference power-law line for comparison
+    k_ref = np.array([ks[1], ks[-1]])  # Avoid the zero frequency bin
+    E_ref = 0.1*(k_ref/10)**power
+    plt.plot(k_ref, E_ref, 'k--', label=f'k^{power}')
 
-
-def plot_vark(myfile, var_name='Bcc', ax=None):
-
+def plot_vark(myfile, var_name='Bcc', ax=None, plot_ref=False):
+    '''
+    Plot the spectrum of a given variable from an Athena++ output file.
+    '''
     d = athdf(myfile)
     X,Y = np.meshgrid(d['x1f'], d['x2f'], indexing='ij')
     # Perform FFT on the 3D array
@@ -117,22 +123,25 @@ def plot_vark(myfile, var_name='Bcc', ax=None):
     ax[0].plot(bin_centers[1:], energy_spectrum_pe[1:],label=str(n))
     ax[1].plot(bin_centers[1:], energy_spectrum_pa[1:])
 
+    if plot_ref:
+        plot_powerlaw(bin_centers[1:], power=3/2)
+
 def plot_vark_t(base_dir, var_name='Bcc'):
     fig, ax = plt.subplots(1, 2, figsize=(10,4))  # 1 row, 2 columns
 
     file_interval = 5
-    files=[base_dir + "/COLL.out1."+"{0:05d}".format(i)+".athdf" for i in range(0,51,file_interval)]
-    for myfile in files:
-        plot_vark(myfile, var_name, ax)
+    files=[base_dir + "/COLL.out1."+"{0:05d}".format(i)+".athdf" for i in range(10,51,file_interval)]
+    for i, myfile in enumerate(files):
+        plot_vark(myfile, var_name, ax, plot_ref=(i==0))
 
-    ax[0].set_xlabel(r'$|k|L_y/2\pi$')
+    ax[0].set_xlabel(r'$|\mathbf{k}|L_y/2\pi$')
     ax[0].set_xscale('log')
     ax[0].set_yscale('log')
     ax[0].set_ylim(10**-3,10**0)
     ax[0].grid(True)
     ax[0].legend()
 
-    ax[1].set_xlabel(r'$|k|L_y/2\pi$')
+    ax[1].set_xlabel(r'$|\mathbf{k}|L_y/2\pi$')
     ax[1].set_xscale('log')
     ax[1].set_yscale('log')
     ax[1].set_ylim(10**-3,10**0)
