@@ -107,3 +107,44 @@ def get_cdl_t(files,target=0.8*20):
     
     return rho_m_t, l_t, M_tot_t, M_perp_t, M_para_t, B_tot_t, B_perp_t, B_para_t, va_tot_t, va_perp_t, va_para_t, rho_max_t, M_tot_max_t, B_tot_max_t, va_tot_max_t, cov_t
 
+def hemholtz_decomposition(d):
+
+    # Perform FFT on the 3D array
+    shape = np.array(np.shape((d['rho'])))
+    N=shape[0]
+
+    # Generate wavevector coordinates ranging from -k to k
+    kz = np.fft.fftfreq(shape[0], d=2/N)
+    ky = np.fft.fftfreq(shape[1], d=2/N)
+    kx = np.fft.fftfreq(shape[2], d=2/N)
+
+    # Shift zero frequency component to the center
+    kz = np.fft.fftshift(kz)
+    ky = np.fft.fftshift(ky)
+    kx = np.fft.fftshift(kx)
+
+    # Create meshgrida for the wavevectors
+    Kz_3d, Ky_3d, Kx_3d = np.meshgrid(kz, ky, kx, indexing='ij')
+    k2_3d = (Kx_3d**2 + Ky_3d**2 + Kz_3d**2)
+
+    fft_vx = np.fft.fftshift(np.fft.fftn(d['vel1'])) #, axes=(0, 1)
+    fft_vy = np.fft.fftshift(np.fft.fftn(d['vel2']))
+    fft_vz = np.fft.fftshift(np.fft.fftn(d['vel3']))
+
+    fft_vx_c = (Kx_3d*fft_vx+Ky_3d*fft_vy+Kz_3d*fft_vz)*Kx_3d/(k2_3d+1e-20)
+    fft_vy_c = (Kx_3d*fft_vx+Ky_3d*fft_vy+Kz_3d*fft_vz)*Ky_3d/(k2_3d+1e-20)
+    fft_vz_c = (Kx_3d*fft_vx+Ky_3d*fft_vy+Kz_3d*fft_vz)*Kz_3d/(k2_3d+1e-20)
+
+    fft_vx_s = fft_vx-fft_vx_c
+    fft_vy_s = fft_vy-fft_vy_c
+    fft_vz_s = fft_vz-fft_vz_c
+
+    vx_s = np.fft.ifftn(np.fft.ifftshift(fft_vx_s))
+    vy_s = np.fft.ifftn(np.fft.ifftshift(fft_vy_s))
+    vz_s = np.fft.ifftn(np.fft.ifftshift(fft_vz_s))
+
+    vx_c = np.fft.ifftn(np.fft.ifftshift(fft_vx_c))
+    vy_c = np.fft.ifftn(np.fft.ifftshift(fft_vy_c))
+    vz_c = np.fft.ifftn(np.fft.ifftshift(fft_vz_c))
+
+    return vx_s,vy_s,vz_s, vx_c,vy_c,vz_c
