@@ -8,7 +8,7 @@ import Constants
 c=Constants.Constants()
 
 base_dir = '../../../../data/TDSC/'
-run_dir = 'M20_Bpe_R2_D0.02_PR/'
+run_dir = 'M10_B0.1_R2_D0.02_FFT/'
 base_dir += run_dir
 
 import matplotlib as mpl
@@ -47,7 +47,7 @@ X,Y = np.meshgrid(d['x1f'], d['x2f'], indexing='ij')
 # Plot beta
 fig = plt.figure(figsize=(8,6))
 ax = fig.add_subplot(111)
-contour = ax.pcolormesh(X, Y, (np.log10(2*d['rho']/(d['Bcc1']**2+d['Bcc2']**2+d['Bcc3']**2))[32,:,:]).T,cmap='plasma',shading='auto')
+contour = ax.pcolormesh(X, Y, (np.log10(d['rho'])[32,:,:]).T,cmap='plasma',shading='auto')
 cb1=plt.colorbar(contour,extend='both',label=r'$\log_{10}\left( \beta \right)$ ')
 # ax.axvline(x=d['x1f'][226], color='k', ls='--')
 # ax.axvline(x=d['x1f'][286], color='k', ls='--')
@@ -56,4 +56,4 @@ ax.set_ylabel("y")
 
 out_dir = '../figs/' + run_dir
 os.makedirs(out_dir, exist_ok=True)
-plt.savefig(out_dir + '/beta.pdf', format='pdf', bbox_inches='tight')
+plt.savefig(out_dir + '/density.pdf', format='pdf', bbox_inches='tight')

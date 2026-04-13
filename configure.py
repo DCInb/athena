@@ -895,8 +895,6 @@ if args['fft']:
         makefile_options['PREPROCESSOR_FLAGS'] += ' -I{0}/include'.format(
             args['fftw_path'])
         makefile_options['LINKER_FLAGS'] += ' -L{0}/lib'.format(args['fftw_path'])
-    if args['omp']:
-        makefile_options['LIBRARY_FLAGS'] += ' -lfftw3_omp'
     if args['mpi']:
         makefile_options['MPIFFT_FILE'] = ' $(wildcard src/fft/plimpton/*.cpp)'
     makefile_options['LIBRARY_FLAGS'] += ' -lfftw3'

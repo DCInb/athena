@@ -15,10 +15,6 @@
 #include <random>
 #include <sstream>
 
-#ifdef FFT
-#include <fftw3.h>
-#endif
-
 // Athena++ headers
 #include "../athena.hpp"
 #include "../athena_arrays.hpp"
@@ -30,6 +26,10 @@
 #include "../parameter_input.hpp"
 #include "../scalars/scalars.hpp"
 #include "../utils/utils.hpp"
+
+#ifdef FFT
+#include <fftw3.h>
+#endif
 
 namespace {
 Real den0, v0, b0;
