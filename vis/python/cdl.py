@@ -19,15 +19,17 @@ def get_cdl(d, idx_l, idx_r):
     M2_tot = 0     # Mach number
     M2_perp= 0     # perpendicular component of Mach number
     M2_para= 0     # parallel component of Mach number
-    B2_tot = 0     # mangetic field
-    B2_perp= 0     # perpendicular component of mangetic field
-    B2_para= 0     # parallel component of mangetic field
+    B2_tot = 0     # magnetic field
+    B2_perp= 0     # perpendicular component of magnetic field
+    B2_para= 0     # parallel component of magnetic field
     va2_tot =0     # Alfven speed
     va2_perp=0     # perpendicular component of Alfven speed
     va2_para=0     # parallel component of Alfven speed
     b_abs   =0     # total magnetic field
     rho2    =0     # density squared
     cov     =0     # covariance of magnetic field and density field
+    M2_wei_t=0     # Mach number weighted by density
+
 
     d_shape=np.shape(d['rho'])
     for k in range(d_shape[0]):
@@ -48,6 +50,7 @@ def get_cdl(d, idx_l, idx_r):
                 b_abs   += B_ijk
                 cov     += B_ijk*d['rho'][k,j,i]
                 rho2    += d['rho'][k,j,i]**2
+                M2_wei_t += (d['vel1'][k,j,i]**2+d['vel2'][k,j,i]**2+d['vel3'][k,j,i]**2)*d['rho'][k,j,i]
 
     rho_m   = m_cdl/n_cdl
     l_cdl   = n_cdl * (d['x1f'][-1]-d['x1f'][0])/d_shape[0]/d_shape[1]/d_shape[2]
@@ -62,8 +65,9 @@ def get_cdl(d, idx_l, idx_r):
     va_perp = (va2_perp/n_cdl)**0.5
     va_para = (va2_para/n_cdl)**0.5
     cov     = (cov-b_abs*m_cdl/n_cdl)/((rho2-rho_m**2/n_cdl)*(B2_tot-b_abs**2/n_cdl))**0.5
+    M_wei_t = (M2_wei_t/n_cdl/rho_m)**0.5
 
-    return rho_m, l_cdl, l, M_tot, M_perp, M_para, B_tot, B_perp, B_para, va_tot, va_perp, va_para, cov
+    return rho_m, l_cdl, l, M_tot, M_perp, M_para, B_tot, B_perp, B_para, va_tot, va_perp, va_para, cov, M_wei_t
 
 def get_cdl_t(files,target=0.8*20):
     rho_m_t = np.zeros_like(files,dtype=np.float64)
@@ -82,11 +86,12 @@ def get_cdl_t(files,target=0.8*20):
     B_tot_max_t = np.zeros_like(files,dtype=np.float64)
     va_tot_max_t = np.zeros_like(files,dtype=np.float64)
     cov_t = np.zeros_like(files,dtype=np.float64)
+    M_wei_t_t = np.zeros_like(files,dtype=np.float64)
 
     for id, myfile in enumerate(files):
         d = athdf(myfile)
         x_l, x_r, idx_l, idx_r = get_xbound(d,target=target)
-        rho_m, l_cdl, l, M_tot, M_perp, M_para, B_tot, B_perp, B_para, va_tot, va_perp, va_para, cov = get_cdl(d, idx_l, idx_r)
+        rho_m, l_cdl, l, M_tot, M_perp, M_para, B_tot, B_perp, B_para, va_tot, va_perp, va_para, cov, M_wei_t = get_cdl(d, idx_l, idx_r)
         rho_m_t[id]   = rho_m
         l_t[id]       = l
         M_tot_t[id]   = M_tot
@@ -99,15 +104,16 @@ def get_cdl_t(files,target=0.8*20):
         va_perp_t[id] = va_perp
         va_para_t[id] = va_para
         cov_t[id]     = cov
-        
+        M_wei_t_t[id]   = M_wei_t
+
         rho_max_t[id]     = np.max(d['rho'])
         M_tot_max_t[id]   = np.max(d['vel1']**2+d['vel2']**2+d['vel3']**2)**0.5
         B_tot_max_t[id]   = np.max(d['Bcc1']**2+d['Bcc2']**2+d['Bcc3']**2)**0.5
         va_tot_max_t[id]  = np.max((d['Bcc1']**2+d['Bcc2']**2+d['Bcc3']**2)/d['rho'])**0.5
     
-    return rho_m_t, l_t, M_tot_t, M_perp_t, M_para_t, B_tot_t, B_perp_t, B_para_t, va_tot_t, va_perp_t, va_para_t, rho_max_t, M_tot_max_t, B_tot_max_t, va_tot_max_t, cov_t
+    return rho_m_t, l_t, M_tot_t, M_perp_t, M_para_t, B_tot_t, B_perp_t, B_para_t, va_tot_t, va_perp_t, va_para_t, rho_max_t, M_tot_max_t, B_tot_max_t, va_tot_max_t, cov_t, M_wei_t_t
 
-def hemholtz_decomposition(d):
+def helmholtz_decomposition(d):
 
     # Perform FFT on the 3D array
     shape = np.array(np.shape((d['rho'])))
@@ -139,12 +145,12 @@ def hemholtz_decomposition(d):
     fft_vy_s = fft_vy-fft_vy_c
     fft_vz_s = fft_vz-fft_vz_c
 
-    vx_s = np.fft.ifftn(np.fft.ifftshift(fft_vx_s))
-    vy_s = np.fft.ifftn(np.fft.ifftshift(fft_vy_s))
-    vz_s = np.fft.ifftn(np.fft.ifftshift(fft_vz_s))
+    vx_s = np.fft.ifftn(np.fft.ifftshift(fft_vx_s)).real
+    vy_s = np.fft.ifftn(np.fft.ifftshift(fft_vy_s)).real
+    vz_s = np.fft.ifftn(np.fft.ifftshift(fft_vz_s)).real
 
-    vx_c = np.fft.ifftn(np.fft.ifftshift(fft_vx_c))
-    vy_c = np.fft.ifftn(np.fft.ifftshift(fft_vy_c))
-    vz_c = np.fft.ifftn(np.fft.ifftshift(fft_vz_c))
+    vx_c = np.fft.ifftn(np.fft.ifftshift(fft_vx_c)).real
+    vy_c = np.fft.ifftn(np.fft.ifftshift(fft_vy_c)).real    
+    vz_c = np.fft.ifftn(np.fft.ifftshift(fft_vz_c)).real
 
     return vx_s,vy_s,vz_s, vx_c,vy_c,vz_c

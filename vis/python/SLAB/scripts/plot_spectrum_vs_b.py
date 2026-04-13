@@ -6,6 +6,7 @@ from athena_read import athdf
 import matplotlib.pyplot as plt
 import Constants 
 c=Constants.Constants()
+from cdl import helmholtz_decomposition
 
 import matplotlib as mpl
 
@@ -46,15 +47,24 @@ def get_fft_var(d, var_name, id_xl, id_xr):
         fft_var1 = np.fft.fftshift(np.fft.fftn(d['Bcc1'][:,:,id_xl:id_xr]*W))
         fft_var2 = np.fft.fftshift(np.fft.fftn(d['Bcc2'][:,:,id_xl:id_xr]*W))
         fft_var3 = np.fft.fftshift(np.fft.fftn(d['Bcc3'][:,:,id_xl:id_xr]*W))
-        fft_var = (fft_var1, fft_var2, fft_var3)
     elif var_name == 'va':
         fft_var1 = np.fft.fftshift(np.fft.fftn(d['Bcc1'][:,:,id_xl:id_xr]/d['rho'][:,:,id_xl:id_xr]*W))
         fft_var2 = np.fft.fftshift(np.fft.fftn(d['Bcc2'][:,:,id_xl:id_xr]/d['rho'][:,:,id_xl:id_xr]*W))
         fft_var3 = np.fft.fftshift(np.fft.fftn(d['Bcc3'][:,:,id_xl:id_xr]/d['rho'][:,:,id_xl:id_xr]*W))
+    elif var_name == 'vs':
+        vx_s,vy_s,vz_s, vx_c,vy_c,vz_c = helmholtz_decomposition(d)
+        fft_var1 = np.fft.fftshift(np.fft.fftn(vx_s[:,:,id_xl:id_xr]*(d['rho'][:,:,id_xl:id_xr])**0.5*W))
+        fft_var2 = np.fft.fftshift(np.fft.fftn(vy_s[:,:,id_xl:id_xr]*(d['rho'][:,:,id_xl:id_xr])**0.5*W))
+        fft_var3 = np.fft.fftshift(np.fft.fftn(vz_s[:,:,id_xl:id_xr]*(d['rho'][:,:,id_xl:id_xr])**0.5*W))
+    elif var_name == 'vc':
+        vx_s,vy_s,vz_s, vx_c,vy_c,vz_c = helmholtz_decomposition(d)
+        fft_var1 = np.fft.fftshift(np.fft.fftn(vx_c[:,:,id_xl:id_xr]*(d['rho'][:,:,id_xl:id_xr])**0.5*W))
+        fft_var2 = np.fft.fftshift(np.fft.fftn(vy_c[:,:,id_xl:id_xr]*(d['rho'][:,:,id_xl:id_xr])**0.5*W))
+        fft_var3 = np.fft.fftshift(np.fft.fftn(vz_c[:,:,id_xl:id_xr]*(d['rho'][:,:,id_xl:id_xr])**0.5*W))
     else:
         raise ValueError("Unsupported variable name for FFT.")
 
-    return fft_var
+    return (fft_var1, fft_var2, fft_var3)
 
 def plot_powerlaw(ax, ks, power):
     # Plot a reference power-law line for comparison
@@ -74,10 +84,11 @@ def plot_vark(myfile, var_name='Bcc', ax=None, plot_ref=False):
     dx=(d['x3f'][-1]-d['x3f'][0])/N
     dv=dx**3
     
-    # Define the slice range in the x-
-    shape_x=shape[2]
-    id_xl = int(shape[2]/2 - shape_x/2)
-    id_xr = int(shape[2]/2 + shape_x/2)
+    # Define the slice range in the x-direction
+    shape_x=int(shape[2]/4)
+    id_xl = int(shape[2]/2 - int(shape_x/2))
+    id_xr = int(shape[2]/2 + int(shape_x/2))
+    shape_x = id_xr - id_xl
 
     # Generate wavevector coordinates ranging from -k to k
     kz = np.fft.fftfreq(shape[0],d=dx)
@@ -127,42 +138,39 @@ def plot_vark(myfile, var_name='Bcc', ax=None, plot_ref=False):
         plot_powerlaw(ax[0], bin_centers[1:], power=3/2)
         plot_powerlaw(ax[1], bin_centers[1:], power=3/2)
 
-def plot_vark_t(base_dir, var_name='Bcc'):
+def plot_vark_t(base_dir, var_names=['Bcc','vs']):
     fig, ax = plt.subplots(1, 2, figsize=(10,4))  # 1 row, 2 columns
 
-    file_interval = 5
-    files=[base_dir + "/COLL.out1."+"{0:05d}".format(i)+".athdf" for i in range(10,51,file_interval)]
-    for i, myfile in enumerate(files):
-        plot_vark(myfile, var_name, ax, plot_ref=(i==0))
+    # file_interval = 5
+    # files=[base_dir + "/COLL.out1."+"{0:05d}".format(i)+".athdf" for i in range(10,51,file_interval)]
+    # for i, myfile in enumerate(files):
+    for var_name in var_names:
+        myfile = base_dir + "/COLL.out1."+"{0:05d}".format(15)+".athdf"
+        plot_vark(myfile, var_name, ax, plot_ref=True)
 
     ax[0].set_xlabel(r'$|\mathbf{k}|L_y/2\pi$')
     ax[0].set_xscale('log')
     ax[0].set_yscale('log')
-    ax[0].set_ylim(10**-3,10**0)
+    # ax[0].set_ylim(10**-3,10**0)
     ax[0].grid(True)
     ax[0].legend()
 
     ax[1].set_xlabel(r'$|\mathbf{k}|L_y/2\pi$')
     ax[1].set_xscale('log')
     ax[1].set_yscale('log')
-    ax[1].set_ylim(10**-3,10**0)
+    # ax[1].set_ylim(10**-3,10**0)
     ax[1].grid(True)
 
-    if var_name == 'Bcc':
-        ax[0].set_ylabel(r'$\mathcal{E}_{B\perp}(k)$')
-        ax[1].set_ylabel(r'$\mathcal{E}_{B\parallel}(k)$')
-    elif var_name == 'va':
-        ax[0].set_ylabel(r'$\mathcal{E}_{v\perp}(k)$')
-        ax[1].set_ylabel(r'$\mathcal{E}_{v\parallel}(k)$')
-    else:
-        raise ValueError("Unsupported variable name for labeling.")
+    ax[0].set_ylabel(r'$\mathcal{E}_{B\perp, v_{s,\perp}}(k)$')
+    ax[1].set_ylabel(r'$\mathcal{E}_{B\parallel, v_{s,\parallel}}(k)$')
+    
 
 
     out_dir = '../figs/' + run_dir
     os.makedirs(out_dir, exist_ok=True)
-    plt.savefig(out_dir + '/EB_spectrum_t.pdf', format='pdf', bbox_inches='tight')
+    plt.savefig(out_dir + '/EB_Vc_spectrum.pdf', format='pdf', bbox_inches='tight')
 
 base_dir = '../../../../data/TDSC/'
 run_dir = 'M10_B0.1_R2_D0.02_PR/'
 base_dir += run_dir
-plot_vark_t(base_dir, var_name='Bcc')
+plot_vark_t(base_dir, var_names=['Bcc','vs'])

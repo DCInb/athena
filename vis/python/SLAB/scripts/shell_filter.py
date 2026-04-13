@@ -6,6 +6,7 @@ from athena_read import athdf
 import matplotlib.pyplot as plt
 import Constants 
 c=Constants.Constants()
+from matplotlib.colors import Normalize
 
 import matplotlib as mpl
 
@@ -180,8 +181,10 @@ def tau_ubp(bK, uQ, d, dx, dv):
     Compute the energy transfer rate through magnetic pressure from velocity field uQ to magnetic field bK.
     """
     # Compute divergence of uQ
-    duQ_dz, duQ_dy, duQ_dx = np.gradient(uQ[0]/np.sqrt(d['rho']), dx, dx, dx)
-    div_uQ = duQ_dx + duQ_dy + duQ_dz
+    dux_dx = np.gradient(uQ[0]/np.sqrt(d['rho']), dx, axis=2)
+    duy_dy = np.gradient(uQ[1]/np.sqrt(d['rho']), dx, axis=1)
+    duz_dz = np.gradient(uQ[2]/np.sqrt(d['rho']), dx, axis=0)
+    div_uQ = dux_dx + duy_dy + duz_dz
 
     # Compute the energy transfer rate
     tau = - (bK[0] * d['Bcc1'] + bK[1] * d['Bcc2'] + bK[2] * d['Bcc3']) * div_uQ / 2
@@ -376,7 +379,7 @@ def shell_to_shell(vK, vQ, bK, bQ, pQ, d, dx, dv):
 
     return (tau_tot, tau_UUA, tau_UUC, tau_BUT, tau_BUP, tau_UBT, tau_UBP, tau_BBA, tau_BBC, tau_PU)
 
-def plot_panel(ax, T, title, eps):
+def plot_panel(ax, q_vals, k_vals, T, title, eps):
 
     im = ax.pcolormesh(
         q_vals,
@@ -444,6 +447,20 @@ def plot_s2s(myfile, n_shells=10):
             for m in range(10):
                 s2s_matrix[m, i, j] = tau[m]
     
+    # correct antisymmetry test for one shell pair
+    err_ma = s2s_matrix[3]+s2s_matrix[5].T  # BUT + UBT
+    err = np.max(np.abs(err_ma))
+    print("stretching terms error: " + str(err))
+    err_ma = s2s_matrix[4]+s2s_matrix[6].T  # BUP + UBP
+    err = np.max(np.abs(err_ma))
+    print("pressure terms error: " + str(err))
+    err_ma = s2s_matrix[1]+s2s_matrix[2]+s2s_matrix[1].T+s2s_matrix[2].T  # UU
+    err = np.max(np.abs(err_ma))
+    print("UU terms error: " + str(err))
+    err_ma = s2s_matrix[7]+s2s_matrix[8]+s2s_matrix[7].T+s2s_matrix[8].T  # BB
+    err = np.max(np.abs(err_ma))
+    print("BB terms error: " + str(err))
+
     # construct data for plotting
     names = [
         r'$\mathcal{T}_{\mathrm{tot}}$',
@@ -467,7 +484,7 @@ def plot_s2s(myfile, n_shells=10):
     cmap = "PuOr_r"
 
     for ax, T, title, ep in zip(axes, s2s_matrix, names, eps):
-        im = plot_panel(ax, T, title, ep)
+        im = plot_panel(ax, k_edges, k_edges, T, title, ep)
         ax.set_ylabel(r'$k_{\mathrm{K}}L_y/2\pi$')
     
     axes[-1].set_xlabel(r'$k_{\mathrm{Q}}L_y/2\pi$')
@@ -498,6 +515,6 @@ def plot_s2s(myfile, n_shells=10):
 base_dir = '../../../../data/TDSC/'
 run_dir = 'M10_B0.1_R2_D0.02_PR/'
 base_dir += run_dir
-myfile=base_dir + "COLL.out1."+"00025"+".athdf"
-# plot_s2s(myfile)
-plot_cro(myfile, n_plot=10)
+myfile=base_dir + "COLL.out1."+"00050"+".athdf"
+plot_s2s(myfile)
+#plot_cro(myfile, n_plot=10)

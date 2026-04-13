@@ -11,5 +11,4 @@ ulimit -l unlimited
 
 module load miniconda3
 source activate athena
-# python shell_filter.py
-python generate_cdl.py
+python generate_cdl.py --dir "../../../../data/TDSC/M20_B0.1_R2_D0.02_PR/"

@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 import matplotlib as mpl
 
@@ -29,27 +30,36 @@ mpl.rcParams.update({
     "ytick.minor.right": True,
 })
 
-cdl_1 = np.loadtxt('../dat/M20_B0.1_R2_D0.02_PR.dat')
-cdl_01 = np.loadtxt('../dat/M20_B0.01_R2_D0.02_PR.dat')
-cdl_001 = np.loadtxt('../dat/M20_B0.001_R2_D0.02_PR.dat')
-cdl_5 = np.loadtxt('../dat/M20_B0.5_R2_D0.02_PR.dat')
-cdl_pe = np.loadtxt('../dat/M20_Bpe_R2_D0.02_PR.dat')
+run_dir = 'M10_B0.1_R1_D0.02_PR'
+cdl_1 = np.loadtxt('../dat/' + run_dir + '.dat')
+run_dir = 'M10_B0.1_R4_D0.02_PR'
+cdl_4 = np.loadtxt('../dat/' + run_dir + '.dat')
+run_dir = 'M10_B0.1_R2_D0.02_PR'
+cdl_2 = np.loadtxt('../dat/' + run_dir + '.dat')
+t=np.arange(1, 51)/50
 
-plt.plot(cdl_01[:,1],cdl_001[:,3],'#87e000')
-plt.plot(cdl_01[:,1],cdl_01[:,3],'#87e885')
-plt.plot(cdl_1[:,1],cdl_1[:,3],'#fae768')
-plt.plot(cdl_5[:,1],cdl_5[:,3],'#fa8080')
-plt.plot(cdl_pe[:,1],cdl_pe[:,3],'k')
-plt.plot(cdl_01[:,1],cdl_001[:,4],linestyle='--', color='#87e000')
-plt.plot(cdl_01[:,1],cdl_01[:,4],linestyle='--', color='#87e885')
-plt.plot(cdl_1[:,1],cdl_1[:,4],linestyle='--', color='#fae768')
-plt.plot(cdl_5[:,1],cdl_5[:,4],linestyle='--', color='#fa8080')
-plt.plot(cdl_pe[:,1],cdl_pe[:,4],linestyle='--', color='k')
+plt.plot(t,cdl_1[:,5],'r',label=r'$M_{cdl}$')
+plt.plot(t,cdl_1[:,6],'r--',label=r'$M_{\perp}$')
+plt.plot(t,cdl_1[:,7],'r-.',label=r'$M_{\parallel}$')
+plt.plot(t,cdl_2[:,5],'b')
+plt.plot(t,cdl_2[:,6],'b--')
+plt.plot(t,cdl_2[:,7],'b-.')
+plt.plot(t,cdl_4[:,5],'g')
+plt.plot(t,cdl_4[:,6],'g--')
+plt.plot(t,cdl_4[:,7],'g-.')
 
-# plt.ylim(10**-3,10**0.5)
+
+# Plot a auxiliary line with slope of growth rate
+plt.plot(t[4:10], 0.01*np.exp(30*(t[4:10]-0.1)), 'k--', label=r'$/gamma=30$')    
+
 plt.axvline(x=-1)
-plt.xlim(0,20)
+plt.xlim(0,1)
+# plt.ylim(10**-2,10**-0.3)
 plt.yscale('log')
-plt.xlabel('l')
-plt.ylabel(r'$Mach_{cdl}$')
-plt.savefig('../figs/mach_cdl.pdf', format='pdf', bbox_inches='tight')
+plt.xlabel('t')
+plt.ylabel(r'$B_{\rm rms}$')
+plt.legend()
+
+out_dir = '../figs/' + run_dir
+os.makedirs(out_dir, exist_ok=True)
+plt.savefig(out_dir + '/B_t_1D.pdf', format='pdf', bbox_inches='tight')
