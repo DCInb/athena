@@ -20,10 +20,10 @@
 
 // See if we have FP16 support
 #ifndef __INTEL_LLVM_COMPILER
-#if defined(__fp16) || defined(__FLT16_MAX__) || defined(__ARM_FP16_FORMAT_IEEE)
-#define fp16_t __fp16
-#elif defined(_Float16)
+#if defined(__FLT16_MAX__)
 #define fp16_t _Float16
+#elif defined(__ARM_FP16_FORMAT_IEEE) || defined(__ARM_FP16_ARGS)
+#define fp16_t __fp16
 #endif
 #else
 #define fp16_t_not_supported
